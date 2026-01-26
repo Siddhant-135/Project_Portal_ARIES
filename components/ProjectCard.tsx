@@ -18,7 +18,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     <Link href={`/project/${project.id}`}>
       <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6 hover:bg-bg-tertiary hover:border-purple-primary transition cursor-pointer">
         <div className="flex justify-between items-start mb-4">
-          <h2 className="text-xl font-bold text-purple-primary">{project.title}</h2>
+          <h2 className="text-xl font-bold text-text-primary">{project.title}</h2>
           <span
             className={`px-3 py-1 rounded-full text-xs font-bold ${
               statusColors[project.status] || 'bg-bg-tertiary text-text-primary'

@@ -142,7 +142,7 @@ export default function ProjectMentorView({
       <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-purple-primary">{project.title}</h1>
+            <h1 className="text-3xl font-bold mb-2 text-text-primary">{project.title}</h1>
             <div className="flex items-center space-x-4 text-sm text-text-muted">
               <span>By {project.creator.full_name}</span>
               <span>•</span>
@@ -183,7 +183,7 @@ export default function ProjectMentorView({
                 href={project.codebase_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-light hover:text-purple-primary hover:underline"
+                className="text-purple-light hover:text-text-primary hover:underline"
               >
                 {project.codebase_link}
               </a>
@@ -197,7 +197,7 @@ export default function ProjectMentorView({
                 href={project.doc_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-light hover:text-purple-primary hover:underline"
+                className="text-purple-light hover:text-text-primary hover:underline"
               >
                 {project.doc_link}
               </a>

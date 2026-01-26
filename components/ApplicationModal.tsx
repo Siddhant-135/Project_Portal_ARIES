@@ -51,7 +51,7 @@ export default function ApplicationModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
       <div className="bg-bg-secondary rounded-lg border border-border-primary p-6 max-w-md w-full mx-4 shadow-xl">
-        <h2 className="text-2xl font-bold mb-4 text-purple-primary">Apply to Project</h2>
+        <h2 className="text-2xl font-bold mb-4 text-text-primary">Apply to Project</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

@@ -40,7 +40,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6 mb-6">
-        <h1 className="text-3xl font-bold mb-4 text-purple-primary">{profile.full_name}</h1>
+        <h1 className="text-3xl font-bold mb-4 text-text-primary">{profile.full_name}</h1>
         <div className="space-y-2 text-text-secondary">
           <p>
             <span className="font-bold">Email:</span> {profile.email}
@@ -83,7 +83,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
                   <div className="flex justify-between items-start">
                     <Link
                       href={`/project/${project.id}`}
-                      className="text-lg font-bold text-purple-light hover:text-purple-primary hover:underline"
+                      className="text-lg font-bold text-purple-light hover:text-text-primary hover:underline"
                     >
                       {project.title}
                     </Link>
@@ -136,7 +136,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
                   <div className="flex justify-between items-start">
                     <Link
                       href={`/project/${project.id}`}
-                      className="text-lg font-bold text-purple-light hover:text-purple-primary hover:underline"
+                      className="text-lg font-bold text-purple-light hover:text-text-primary hover:underline"
                     >
                       {project.title}
                     </Link>
