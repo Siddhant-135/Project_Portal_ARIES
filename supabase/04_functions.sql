@@ -16,8 +16,12 @@ RETURNS TRIGGER AS $$
 BEGIN
   -- If trying to set role to Admin, check if user is already an Admin
   IF NEW.role = 'Admin' AND OLD.role != 'Admin' THEN
-    -- Only allow if current user is already an Admin
-    IF NOT EXISTS (
+    -- Allow if using service role (auth.uid() is NULL for service role)
+    -- Or if current user is already an Admin
+    IF auth.uid() IS NULL THEN
+      -- Service role update, allow it
+      RETURN NEW;
+    ELSIF NOT EXISTS (
       SELECT 1 FROM profiles 
       WHERE id = auth.uid() AND role = 'Admin'
     ) THEN
