@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { acceptApplication, rejectApplication, updateParticipantStatus } from '@/app/actions/applications';
-import { updateProjectStatus, deleteProject } from '@/app/actions/projects';
+import { updateProjectStatus, reopenProject } from '@/app/actions/projects';
 import { createExitReview } from '@/app/actions/reviews';
 import ReviewModal from './ReviewModal';
 import { formatDate } from '@/lib/utils';
@@ -26,32 +26,57 @@ export default function ProjectMentorView({
     action: 'drop' | 'discharge' | 'complete';
   } | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const activeMentees = participants.filter(
-    (p) => p.role === 'Mentee' && p.status === 'Active'
+  // Separate pending applicants from active mentees
+  const pendingApplicants = participants.filter(
+    (p) => p.role === 'Mentee' && p.status === 'Pending'
   );
-  const applicants = participants.filter(
+  const activeMentees = participants.filter(
     (p) => p.role === 'Mentee' && p.status === 'Active'
   );
 
   const handleAccept = async (participantId: string) => {
     setLoading(participantId);
-    await acceptApplication(participantId);
+    setError(null);
+    const result = await acceptApplication(participantId);
+    if (result.error) {
+      setError(result.error);
+    }
     setLoading(null);
     router.refresh();
   };
 
   const handleReject = async (participantId: string) => {
     setLoading(participantId);
-    await rejectApplication(participantId);
+    setError(null);
+    const result = await rejectApplication(participantId);
+    if (result.error) {
+      setError(result.error);
+    }
     setLoading(null);
     router.refresh();
   };
 
   const handleLaunch = async () => {
     setLoading('launch');
-    await updateProjectStatus(project.id, 'Launched');
+    setError(null);
+    const result = await updateProjectStatus(project.id, 'Launched');
+    if (result.error) {
+      setError(result.error);
+    }
+    setLoading(null);
+    router.refresh();
+  };
+
+  const handleReopen = async () => {
+    setLoading('reopen');
+    setError(null);
+    const result = await reopenProject(project.id);
+    if (result.error) {
+      setError(result.error);
+    }
     setLoading(null);
     router.refresh();
   };
@@ -66,7 +91,11 @@ export default function ProjectMentorView({
       });
     } else {
       setLoading('complete');
-      await updateProjectStatus(project.id, 'Completed');
+      setError(null);
+      const result = await updateProjectStatus(project.id, 'Completed');
+      if (result.error) {
+        setError(result.error);
+      }
       setLoading(null);
       router.refresh();
     }
@@ -74,7 +103,11 @@ export default function ProjectMentorView({
 
   const handleTerminate = async () => {
     setLoading('terminate');
-    await updateProjectStatus(project.id, 'Terminated');
+    setError(null);
+    const result = await updateProjectStatus(project.id, 'Terminated');
+    if (result.error) {
+      setError(result.error);
+    }
     setLoading(null);
     router.refresh();
   };
@@ -139,7 +172,7 @@ export default function ProjectMentorView({
 
   return (
     <>
-      <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6">
+      <div className="bg-bg-secondary rounded-lg p-6 ai-border ai-glow">
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-3xl font-bold mb-2 text-text-primary">{project.title}</h1>
@@ -157,6 +190,12 @@ export default function ProjectMentorView({
             {project.status}
           </span>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-status-error/20 border border-status-error text-status-error rounded">
+            {error}
+          </div>
+        )}
 
         <div className="space-y-6">
           <div>
@@ -204,38 +243,38 @@ export default function ProjectMentorView({
             </div>
           )}
 
-          {/* Applicants/Active Mentees */}
-          <div>
-            <h2 className="text-xl font-bold mb-4 text-pink-primary">
-              Applicants & Active Mentees ({activeMentees.length} / {project.max_students})
-            </h2>
-            <div className="space-y-3">
-              {applicants.map((participant) => (
-                <div
-                  key={participant.id}
-                  className="border border-border-primary rounded-lg p-4 bg-bg-tertiary"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-bold text-text-primary">{participant.user.full_name}</p>
-                      <p className="text-sm text-text-muted">{participant.user.email}</p>
-                      <div className="text-sm text-text-muted mt-1">
-                        <p>
-                          Prerequisites Met: {participant.prerequisites_met ? 'Yes' : 'No'}
-                        </p>
-                        {participant.prerequisites_notes && (
-                          <p className="mt-1 italic">
-                            Notes: {participant.prerequisites_notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      {project.status === 'Open' && (
-                        <>
+          {/* Pending Applicants - Only shown when project is Open */}
+          {project.status === 'Open' && (
+            <div>
+              <h2 className="text-xl font-bold mb-4 text-status-warning">
+                Pending Applicants ({pendingApplicants.length})
+              </h2>
+              {pendingApplicants.length > 0 ? (
+                <div className="space-y-3">
+                  {pendingApplicants.map((participant) => (
+                    <div
+                      key={participant.id}
+                      className="border border-status-warning/50 rounded-lg p-4 bg-status-warning/10"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-bold text-text-primary">{participant.user.full_name}</p>
+                          <p className="text-sm text-text-muted">{participant.user.email}</p>
+                          <div className="text-sm text-text-muted mt-1">
+                            <p>
+                              Prerequisites Met: {participant.prerequisites_met ? 'Yes' : 'No'}
+                            </p>
+                            {participant.prerequisites_notes && (
+                              <p className="mt-1 italic">
+                                Experience: {participant.prerequisites_notes}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
                           <button
                             onClick={() => handleAccept(participant.id)}
-                            disabled={loading === participant.id}
+                            disabled={loading === participant.id || activeMentees.length >= project.max_students}
                             className="px-3 py-1 bg-status-success text-text-primary rounded hover:opacity-80 transition disabled:opacity-50 text-sm font-medium"
                           >
                             {loading === participant.id ? 'Processing...' : 'Accept'}
@@ -247,10 +286,41 @@ export default function ProjectMentorView({
                           >
                             Reject
                           </button>
-                        </>
-                      )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-text-muted">No pending applicants</p>
+              )}
+              {pendingApplicants.length > 0 && (
+                <p className="text-sm text-text-muted mt-2">
+                  Note: Pending applicants will be automatically rejected when you launch the project.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Active Mentees */}
+          <div>
+            <h2 className="text-xl font-bold mb-4 text-pink-primary">
+              Active Mentees ({activeMentees.length} / {project.max_students})
+            </h2>
+            {activeMentees.length > 0 ? (
+              <div className="space-y-3">
+                {activeMentees.map((participant) => (
+                  <div
+                    key={participant.id}
+                    className="border border-border-primary rounded-lg p-4 bg-bg-tertiary"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-bold text-text-primary">{participant.user.full_name}</p>
+                        <p className="text-sm text-text-muted">{participant.user.email}</p>
+                      </div>
                       {project.status === 'Launched' && (
-                        <>
+                        <div className="flex space-x-2">
                           <button
                             onClick={() => handleDrop(participant)}
                             className="px-3 py-1 bg-status-warning text-text-primary rounded hover:opacity-80 transition text-sm font-medium"
@@ -263,16 +333,15 @@ export default function ProjectMentorView({
                           >
                             Discharge
                           </button>
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
-              {applicants.length === 0 && (
-                <p className="text-text-muted">No applicants or active mentees</p>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-text-muted">No active mentees yet</p>
+            )}
           </div>
 
           {/* Project Actions */}
@@ -282,14 +351,22 @@ export default function ProjectMentorView({
               {project.status === 'Open' && (
                 <button
                   onClick={handleLaunch}
-                  disabled={loading === 'launch'}
+                  disabled={loading === 'launch' || activeMentees.length === 0}
                   className="px-4 py-2 bg-purple-primary text-text-primary rounded hover:bg-purple-secondary transition disabled:opacity-50 font-bold"
+                  title={activeMentees.length === 0 ? 'Accept at least one mentee before launching' : ''}
                 >
                   {loading === 'launch' ? 'Processing...' : 'Launch Project'}
                 </button>
               )}
               {project.status === 'Launched' && (
                 <>
+                  <button
+                    onClick={handleReopen}
+                    disabled={loading === 'reopen'}
+                    className="px-4 py-2 bg-status-warning text-text-primary rounded hover:opacity-80 transition disabled:opacity-50 font-bold"
+                  >
+                    {loading === 'reopen' ? 'Processing...' : 'Reopen Applications'}
+                  </button>
                   <button
                     onClick={handleComplete}
                     disabled={loading === 'complete'}
@@ -305,6 +382,11 @@ export default function ProjectMentorView({
                     {loading === 'terminate' ? 'Processing...' : 'Terminate Project'}
                   </button>
                 </>
+              )}
+              {project.status === 'Open' && activeMentees.length === 0 && (
+                <p className="text-text-muted text-sm self-center">
+                  Accept at least one mentee before launching
+                </p>
               )}
             </div>
           </div>

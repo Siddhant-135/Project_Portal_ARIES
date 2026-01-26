@@ -2,7 +2,7 @@
 
 import { createClientServer } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { countWords } from '@/lib/utils';
+import { countWords, mapSupabaseError } from '@/lib/utils';
 
 export async function createReview(
   projectId: string,
@@ -57,7 +57,7 @@ export async function createReview(
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: mapSupabaseError(error.message) };
   }
 
   revalidatePath(`/project/${projectId}`);

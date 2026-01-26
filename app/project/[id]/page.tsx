@@ -42,13 +42,13 @@ export default async function ProjectPage({ params }: { params: { id: string } }
       profile = profileData;
     }
 
-    if (profile?.role === 'Student') {
+    // Get active slots for all users (role hierarchy: Admin ⊃ ARIES_Member ⊃ Student)
+    if (profile) {
       activeSlots = await getActiveSlots(profile.id);
     }
   }
 
   const isMentor = profile?.id === project.created_by;
-  const isStudent = profile?.role === 'Student' && !isMentor;
 
   return (
     <div className="max-w-4xl mx-auto">

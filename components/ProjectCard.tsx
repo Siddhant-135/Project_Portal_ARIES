@@ -16,7 +16,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <Link href={`/project/${project.id}`}>
-      <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6 hover:bg-bg-tertiary hover:border-purple-primary transition cursor-pointer">
+      <div className="bg-bg-secondary rounded-lg p-6 ai-border hover:ai-glow hover:border-purple-primary transition-all duration-200 cursor-pointer hover:-translate-y-0.5">
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-xl font-bold text-text-primary">{project.title}</h2>
           <span

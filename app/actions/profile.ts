@@ -1,6 +1,7 @@
 'use server';
 
 import { createClientServer } from '@/lib/supabase/server';
+import { mapSupabaseError } from '@/lib/utils';
 
 export async function ensureProfileExists() {
   const supabase = createClientServer();
@@ -44,7 +45,7 @@ export async function ensureProfileExists() {
     });
 
     if (insertError) {
-      return { error: insertError.message };
+      return { error: mapSupabaseError(insertError.message) };
     }
   }
 

@@ -54,30 +54,8 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Protect /admin route - only Admins can access
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-    const username = user.email?.split('@')[0];
-    if (!username) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('username', username)
-      .single();
-
-    if (!profile || profile.role !== 'Admin') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-  }
+  // Refresh session if needed
+  await supabase.auth.getUser();
 
   return response;
 }

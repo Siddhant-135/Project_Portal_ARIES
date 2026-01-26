@@ -2,7 +2,7 @@
 
 import { createClientServer } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { countWords } from '@/lib/utils';
+import { countWords, mapSupabaseError } from '@/lib/utils';
 import type { ParticipantStatus } from '@/lib/supabase/types';
 
 export async function getActiveSlots(userId: string): Promise<number> {
@@ -51,29 +51,14 @@ export async function applyToProject(
     .eq('username', username)
     .single();
 
-  if (!profile || profile.role !== 'Student') {
-    return { error: 'Only Students can apply to projects' };
+  if (!profile) {
+    return { error: 'Profile not found' };
   }
 
-  // Validate prerequisites_notes (required, 50 words max)
-  if (!prerequisitesNotes || !prerequisitesNotes.trim()) {
-    return { error: 'Related experience is required (enter N/A if none)' };
-  }
-  const maxNotesWords = 50;
-  if (countWords(prerequisitesNotes) > maxNotesWords) {
-    return { error: `Related experience must be ${maxNotesWords} words or less` };
-  }
-
-  // Check 3-slot rule
-  const activeSlots = await getActiveSlots(profile.id);
-  if (activeSlots >= 3) {
-    return { error: 'You have reached the maximum of 3 active project slots' };
-  }
-
-  // Check if project exists and is Open
+  // Check if user is the project creator (mentor) - mentors cannot apply to their own project
   const { data: project } = await supabase
     .from('projects')
-    .select('status, max_students')
+    .select('created_by, status, max_students')
     .eq('id', projectId)
     .single();
 
@@ -81,8 +66,32 @@ export async function applyToProject(
     return { error: 'Project not found' };
   }
 
+  if (project.created_by === profile.id) {
+    return { error: 'You cannot apply to your own project' };
+  }
+
   if (project.status !== 'Open') {
     return { error: 'Project is not accepting applications' };
+  }
+
+  // Must have prerequisites met to apply
+  if (!prerequisitesMet) {
+    return { error: 'Prerequisites not met, cannot apply' };
+  }
+
+  // If prerequisites met but notes empty, auto-fill with "N/A"
+  const finalNotes = prerequisitesNotes.trim() || 'N/A';
+
+  // Validate prerequisites_notes (50 words max)
+  const maxNotesWords = 50;
+  if (countWords(finalNotes) > maxNotesWords) {
+    return { error: `Related experience must be ${maxNotesWords} words or less` };
+  }
+
+  // Check 3-slot rule
+  const activeSlots = await getActiveSlots(profile.id);
+  if (activeSlots >= 3) {
+    return { error: 'You have reached the maximum of 3 active project slots' };
   }
 
   // Check if already applied
@@ -108,18 +117,19 @@ export async function applyToProject(
     return { error: 'Project has reached maximum student capacity' };
   }
 
+  // Insert as 'Pending' - mentor must accept to make 'Active'
   const { error } = await supabase.from('project_participants').insert({
     project_id: projectId,
     user_id: profile.id,
     role: 'Mentee',
-    status: 'Active',
+    status: 'Pending',
     prerequisites_met: prerequisitesMet,
-    prerequisites_notes: prerequisitesNotes.trim(),
+    prerequisites_notes: finalNotes,
     consent_to_share: consentToShare,
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: mapSupabaseError(error.message) };
   }
 
   revalidatePath(`/project/${projectId}`);
@@ -155,7 +165,7 @@ export async function acceptApplication(participantId: string) {
   // Get participant and project info
   const { data: participant } = await supabase
     .from('project_participants')
-    .select('project_id, projects!inner(created_by, max_students)')
+    .select('project_id, status, projects!inner(created_by, max_students, status)')
     .eq('id', participantId)
     .single();
 
@@ -163,21 +173,41 @@ export async function acceptApplication(participantId: string) {
     return { error: 'Unauthorized: Only project creator can accept applications' };
   }
 
-  // Check max students limit
-  const { data: currentParticipants } = await supabase
+  // Check if project is still Open
+  if ((participant as any).projects.status !== 'Open') {
+    return { error: 'Can only accept applications for Open projects' };
+  }
+
+  // Check if application is Pending
+  if ((participant as any).status !== 'Pending') {
+    return { error: 'Application is not pending' };
+  }
+
+  // Check max students limit (count only Active mentees, not Pending)
+  const { data: activeMentees } = await supabase
     .from('project_participants')
     .select('id')
     .eq('project_id', (participant as any).project_id)
+    .eq('role', 'Mentee')
     .eq('status', 'Active');
 
   if (
-    currentParticipants &&
-    currentParticipants.length >= (participant as any).projects.max_students
+    activeMentees &&
+    activeMentees.length >= (participant as any).projects.max_students
   ) {
     return { error: 'Project has reached maximum student capacity' };
   }
 
-  // Application is already Active, so this just confirms it
+  // Update status from Pending to Active
+  const { error } = await supabase
+    .from('project_participants')
+    .update({ status: 'Active' })
+    .eq('id', participantId);
+
+  if (error) {
+    return { error: mapSupabaseError(error.message) };
+  }
+
   revalidatePath(`/project/${(participant as any).project_id}`);
   return { success: true };
 }
@@ -220,7 +250,7 @@ export async function rejectApplication(participantId: string) {
     .eq('id', participantId);
 
   if (error) {
-    return { error: error.message };
+    return { error: mapSupabaseError(error.message) };
   }
 
   revalidatePath(`/project/${(participant as any).project_id}`);
@@ -281,7 +311,7 @@ export async function updateParticipantStatus(
     .eq('id', participantId);
 
   if (updateError) {
-    return { error: updateError.message };
+    return { error: mapSupabaseError(updateError.message) };
   }
 
   // Create review if provided
@@ -294,7 +324,7 @@ export async function updateParticipantStatus(
     });
 
     if (reviewError) {
-      return { error: reviewError.message };
+      return { error: mapSupabaseError(reviewError.message) };
     }
   }
 

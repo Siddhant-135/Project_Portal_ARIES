@@ -73,9 +73,13 @@ CREATE POLICY "Admins can update any profile" ON profiles
 -- RLS Policies for projects
 -- ============================================
 
--- Everyone can view Open and Completed projects, or projects they created
-CREATE POLICY "Open and Completed projects are viewable by everyone" ON projects
-  FOR SELECT USING (status IN ('Open', 'Completed') OR created_by = current_profile_id());
+-- Drop existing policy for clean re-creation
+DROP POLICY IF EXISTS "Open and Completed projects are viewable by everyone" ON projects;
+DROP POLICY IF EXISTS "Projects are viewable based on status" ON projects;
+
+-- Everyone can view Open, Launched (ongoing), and Completed projects, or projects they created
+CREATE POLICY "Projects are viewable based on status" ON projects
+  FOR SELECT USING (status IN ('Open', 'Launched', 'Completed') OR created_by = current_profile_id());
 
 -- ARIES Members and Admins can create projects
 CREATE POLICY "ARIES Members and Admins can create projects" ON projects
@@ -94,30 +98,62 @@ CREATE POLICY "Project creators can update their projects" ON projects
 -- RLS Policies for project_participants
 -- ============================================
 
+-- Drop existing policies for clean re-creation
+DROP POLICY IF EXISTS "Participants are viewable by project members or for Open/Completed projects" ON project_participants;
+DROP POLICY IF EXISTS "Students can apply to projects" ON project_participants;
+DROP POLICY IF EXISTS "Users can apply to projects" ON project_participants;
+DROP POLICY IF EXISTS "Project creators can add mentor" ON project_participants;
+DROP POLICY IF EXISTS "Project creators can manage participants" ON project_participants;
+DROP POLICY IF EXISTS "Project creators can delete participants" ON project_participants;
+
 -- Users can view participants of projects they're involved in or Open/Completed projects
 CREATE POLICY "Participants are viewable by project members or for Open/Completed projects" ON project_participants
   FOR SELECT USING (
     user_id = current_profile_id() OR
     EXISTS (
       SELECT 1 FROM projects
-      WHERE id = project_id AND (status IN ('Open', 'Completed') OR created_by = current_profile_id())
+      WHERE id = project_id AND (status IN ('Open', 'Completed', 'Launched') OR created_by = current_profile_id())
     )
   );
 
--- Students can insert their own applications
-CREATE POLICY "Students can apply to projects" ON project_participants
+-- Anyone can apply to projects as Mentee (role hierarchy: Admin ⊃ ARIES_Member ⊃ Student)
+-- They cannot apply to their own projects
+CREATE POLICY "Users can apply to projects" ON project_participants
   FOR INSERT WITH CHECK (
+    -- User is inserting for themselves
     user_id = current_profile_id() AND
+    -- As a Mentee (applying)
     role = 'Mentee' AND
-    EXISTS (
-      SELECT 1 FROM profiles WHERE id = current_profile_id() AND role = 'Student'
+    -- Not applying to their own project
+    NOT EXISTS (
+      SELECT 1 FROM projects WHERE id = project_id AND created_by = current_profile_id()
     )
+  );
+
+-- Project creators can add themselves as Mentor when creating a project
+CREATE POLICY "Project creators can add mentor" ON project_participants
+  FOR INSERT WITH CHECK (
+    -- User is the project creator
+    EXISTS (
+      SELECT 1 FROM projects WHERE id = project_id AND created_by = current_profile_id()
+    ) AND
+    -- Adding themselves as Mentor
+    user_id = current_profile_id() AND
+    role = 'Mentor'
   );
 
 -- Project creators can update participants (accept/reject/kick/promote)
--- This allows promoting accepted mentees to mentors
 CREATE POLICY "Project creators can manage participants" ON project_participants
   FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE id = project_id AND created_by = current_profile_id()
+    )
+  );
+
+-- Project creators can delete participants (reject applications)
+CREATE POLICY "Project creators can delete participants" ON project_participants
+  FOR DELETE USING (
     EXISTS (
       SELECT 1 FROM projects
       WHERE id = project_id AND created_by = current_profile_id()

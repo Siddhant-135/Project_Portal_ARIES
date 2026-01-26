@@ -24,13 +24,15 @@ export default function ProjectStudentView({
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const router = useRouter();
 
+  // Check if user has already applied (as mentee) using profile.id for proper comparison
   const hasApplied = participants.some(
-    (p) => p.user_id === user?.id && p.role === 'Mentee'
+    (p) => p.user_id === profile?.id && p.role === 'Mentee'
   );
 
+  // Anyone can apply except the project creator (mentor) - role hierarchy: Admin ⊃ ARIES_Member ⊃ Student
   const canApply =
     user &&
-    profile?.role === 'Student' &&
+    profile &&
     project.status === 'Open' &&
     !hasApplied &&
     activeSlots < 3;
@@ -48,7 +50,7 @@ export default function ProjectStudentView({
 
   return (
     <>
-      <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6">
+      <div className="bg-bg-secondary rounded-lg p-6 ai-border ai-glow">
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-3xl font-bold mb-2 text-text-primary">{project.title}</h1>
@@ -162,15 +164,7 @@ export default function ProjectStudentView({
             </div>
           )}
 
-          {user && profile?.role !== 'Student' && (
-            <div className="pt-4">
-              <p className="text-text-secondary">
-                Only Students can apply to projects
-              </p>
-            </div>
-          )}
-
-          {activeSlots >= 3 && (
+          {user && profile && activeSlots >= 3 && !hasApplied && (
             <div className="pt-4">
               <p className="text-status-error font-bold">
                 You have reached the maximum of 3 active project slots

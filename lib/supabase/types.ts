@@ -1,7 +1,7 @@
 export type UserRole = 'Student' | 'ARIES_Member' | 'Admin';
 export type ProjectStatus = 'Open' | 'Launched' | 'Completed' | 'Terminated';
 export type ParticipantRole = 'Mentor' | 'Mentee';
-export type ParticipantStatus = 'Active' | 'Dropped' | 'Discharged';
+export type ParticipantStatus = 'Pending' | 'Active' | 'Dropped' | 'Discharged';
 
 export interface Profile {
   id: string;

@@ -58,7 +58,7 @@ export default function NewProjectForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="bg-bg-secondary rounded-lg p-6 space-y-6 ai-border ai-glow">
       <div>
         <label className="block text-sm font-bold text-text-primary mb-2">
           Title *
@@ -68,7 +68,7 @@ export default function NewProjectForm() {
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
-          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
+          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary ai-border"
         />
       </div>
 
@@ -81,7 +81,7 @@ export default function NewProjectForm() {
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           required
           rows={6}
-          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
+          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary ai-border"
         />
         <p className={`text-sm mt-1 font-bold ${descWords > maxWords ? 'text-status-error' : 'text-text-muted'}`}>
           {descWords} / {maxWords} words
@@ -97,7 +97,7 @@ export default function NewProjectForm() {
           onChange={(e) => setFormData({ ...formData, prerequisites: e.target.value })}
           required
           rows={6}
-          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
+          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary ai-border"
         />
         <p className={`text-sm mt-1 font-bold ${prereqWords > maxWords ? 'text-status-error' : 'text-text-muted'}`}>
           {prereqWords} / {maxWords} words
@@ -115,7 +115,7 @@ export default function NewProjectForm() {
           }
           required
           rows={6}
-          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
+          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary ai-border"
         />
         <p className={`text-sm mt-1 font-bold ${objWords > maxWords ? 'text-status-error' : 'text-text-muted'}`}>
           {objWords} / {maxWords} words
@@ -132,7 +132,7 @@ export default function NewProjectForm() {
           onChange={(e) => setFormData({ ...formData, max_students: e.target.value })}
           required
           min="1"
-          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
+          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary ai-border"
         />
       </div>
 
@@ -144,7 +144,7 @@ export default function NewProjectForm() {
           type="url"
           value={formData.codebase_link}
           onChange={(e) => setFormData({ ...formData, codebase_link: e.target.value })}
-          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
+          className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary ai-border"
         />
       </div>
 

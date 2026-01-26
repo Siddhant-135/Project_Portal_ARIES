@@ -2,7 +2,7 @@
 
 import { createClientServer } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { countWords } from '@/lib/utils';
+import { countWords, mapSupabaseError, canCreateProjects } from '@/lib/utils';
 import type { ProjectStatus } from '@/lib/supabase/types';
 
 export async function createProject(formData: FormData) {
@@ -25,7 +25,7 @@ export async function createProject(formData: FormData) {
     .eq('username', username)
     .single();
 
-  if (!profile || !['ARIES_Member', 'Admin'].includes(profile.role)) {
+  if (!profile || !canCreateProjects(profile.role)) {
     return { error: 'Unauthorized: Only ARIES Members and Admins can create projects' };
   }
 
@@ -65,7 +65,7 @@ export async function createProject(formData: FormData) {
     .single();
 
   if (error) {
-    return { error: error.message };
+    return { error: mapSupabaseError(error.message) };
   }
 
   // Add creator as mentor
@@ -109,12 +109,22 @@ export async function updateProjectStatus(
 
   const { data: project } = await supabase
     .from('projects')
-    .select('created_by')
+    .select('created_by, status')
     .eq('id', projectId)
     .single();
 
   if (!project || project.created_by !== profile.id) {
     return { error: 'Unauthorized: Only project creator can update status' };
+  }
+
+  // When launching a project, auto-reject (delete) all pending applicants
+  if (status === 'Launched' && project.status === 'Open') {
+    await supabase
+      .from('project_participants')
+      .delete()
+      .eq('project_id', projectId)
+      .eq('role', 'Mentee')
+      .eq('status', 'Pending');
   }
 
   const updateData: any = { status };
@@ -128,7 +138,58 @@ export async function updateProjectStatus(
     .eq('id', projectId);
 
   if (error) {
-    return { error: error.message };
+    return { error: mapSupabaseError(error.message) };
+  }
+
+  revalidatePath(`/project/${projectId}`);
+  revalidatePath('/');
+  return { success: true };
+}
+
+export async function reopenProject(projectId: string) {
+  const supabase = createClientServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'Not authenticated' };
+  }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .single();
+  if (!profile) {
+    return { error: 'Profile not found' };
+  }
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('created_by, status')
+    .eq('id', projectId)
+    .single();
+
+  if (!project || project.created_by !== profile.id) {
+    return { error: 'Unauthorized: Only project creator can reopen project' };
+  }
+
+  // Can only reopen Launched projects
+  if (project.status !== 'Launched') {
+    return { error: 'Can only reopen Launched projects' };
+  }
+
+  const { error } = await supabase
+    .from('projects')
+    .update({ status: 'Open' })
+    .eq('id', projectId);
+
+  if (error) {
+    return { error: mapSupabaseError(error.message) };
   }
 
   revalidatePath(`/project/${projectId}`);
@@ -184,14 +245,14 @@ export async function deleteProject(projectId: string) {
       .eq('id', projectId);
 
     if (error) {
-      return { error: error.message };
+      return { error: mapSupabaseError(error.message) };
     }
   } else {
     // No active participants, safe to delete
     const { error } = await supabase.from('projects').delete().eq('id', projectId);
 
     if (error) {
-      return { error: error.message };
+      return { error: mapSupabaseError(error.message) };
     }
   }
 

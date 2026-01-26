@@ -1,6 +1,7 @@
 import { createClientServer } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import NewProjectForm from '@/components/NewProjectForm';
+import { canCreateProjects } from '@/lib/utils';
 
 export default async function NewProjectPage() {
   const supabase = createClientServer();
@@ -22,7 +23,7 @@ export default async function NewProjectPage() {
     .eq('username', username)
     .single();
 
-  if (!profile || !['ARIES_Member', 'Admin'].includes(profile.role)) {
+  if (!profile || !canCreateProjects(profile.role)) {
     redirect('/');
   }
 

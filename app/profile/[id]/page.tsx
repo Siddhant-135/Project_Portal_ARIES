@@ -5,10 +5,6 @@ import Link from 'next/link';
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const supabase = createClientServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const currentUsername = user?.email?.split('@')[0];
 
   // Get profile
   const { data: profile, error: profileError } = await supabase
@@ -21,26 +17,100 @@ export default async function ProfilePage({ params }: { params: { id: string } }
     notFound();
   }
 
-  // Get user's projects as mentor (including Terminated)
-  const { data: mentorProjects } = await supabase
+  // Get all user's project participations (both as mentor and mentee)
+  const { data: allParticipations } = await supabase
     .from('project_participants')
     .select('*, project:projects(*, creator:profiles!projects_created_by_fkey(*))')
-    .eq('user_id', profile.id)
-    .eq('role', 'Mentor');
+    .eq('user_id', profile.id);
 
-  // Get user's projects as mentee (excluding Terminated)
-  const { data: menteeProjects } = await supabase
-    .from('project_participants')
-    .select('*, project:projects!inner(*, creator:profiles!projects_created_by_fkey(*))')
-    .eq('user_id', profile.id)
-    .eq('role', 'Mentee')
-    .not('project.status', 'eq', 'Terminated');
+  // Filter and organize projects by status
+  const validParticipations = allParticipations?.filter((p: any) => p.project) || [];
+  
+  // Ongoing projects (Launched status) - both mentor and mentee
+  const ongoingProjects = validParticipations.filter(
+    (p: any) => p.project.status === 'Launched'
+  );
+  
+  // Open projects (waiting for applications or applied) - both mentor and mentee
+  const openProjects = validParticipations.filter(
+    (p: any) => p.project.status === 'Open'
+  );
+  
+  // Completed projects - both mentor and mentee
+  const completedProjects = validParticipations.filter(
+    (p: any) => p.project.status === 'Completed'
+  );
+  
+  // Terminated projects (only show for mentors for history)
+  const terminatedProjects = validParticipations.filter(
+    (p: any) => p.project.status === 'Terminated' && p.role === 'Mentor'
+  );
 
-  const isOwnProfile = currentUsername === params.id;
+  const statusColors: Record<string, string> = {
+    Open: 'bg-status-success text-text-primary font-bold',
+    Launched: 'bg-status-info text-text-primary font-bold',
+    Completed: 'bg-bg-tertiary text-text-primary font-bold',
+    Terminated: 'bg-status-error text-text-primary font-bold',
+  };
+
+  const roleColors: Record<string, string> = {
+    Mentor: 'bg-pink-primary text-text-primary',
+    Mentee: 'bg-purple-primary text-text-primary',
+  };
+
+  const renderProjectCard = (participant: any) => {
+    const project = participant.project;
+    if (!project) return null;
+
+    return (
+      <div
+        key={participant.id}
+        className="border border-border-primary rounded-lg p-4 hover:bg-bg-tertiary bg-bg-primary transition ai-border"
+      >
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <Link
+              href={`/project/${project.id}`}
+              className="text-lg font-bold text-purple-light hover:text-text-primary hover:underline"
+            >
+              {project.title}
+            </Link>
+            <p className="text-sm text-text-muted mt-1">
+              by {project.creator?.full_name || 'Unknown'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span
+              className={`px-2 py-1 rounded text-xs font-bold ${roleColors[participant.role]}`}
+            >
+              {participant.role}
+            </span>
+            <span
+              className={`px-2 py-1 rounded text-xs font-bold ${
+                statusColors[project.status] || 'bg-bg-tertiary text-text-primary'
+              }`}
+            >
+              {project.status === 'Launched' ? 'Ongoing' : project.status}
+            </span>
+          </div>
+        </div>
+        <p className="text-sm text-text-muted mt-2">
+          {participant.status !== 'Active' && (
+            <span className="text-status-warning">({participant.status}) • </span>
+          )}
+          Created: {formatDate(project.created_at)}
+        </p>
+      </div>
+    );
+  };
+
+  const hasAnyProjects = ongoingProjects.length > 0 || openProjects.length > 0 || 
+                          completedProjects.length > 0 || terminatedProjects.length > 0;
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6 mb-6">
+      {/* Profile Info */}
+      <div className="bg-bg-secondary rounded-lg p-6 mb-6 ai-border ai-glow">
         <h1 className="text-3xl font-bold mb-4 text-text-primary">{profile.full_name}</h1>
         <div className="space-y-2 text-text-secondary">
           <p>
@@ -60,112 +130,74 @@ export default async function ProfilePage({ params }: { params: { id: string } }
         </div>
       </div>
 
-      {/* Mentor Projects */}
-      {mentorProjects && mentorProjects.length > 0 && (
-        <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4 text-pink-primary">Projects as Mentor</h2>
-          <div className="space-y-4">
-            {mentorProjects.map((participant: any) => {
-              const project = participant.project;
-              if (!project) return null;
-
-              const statusColors: Record<string, string> = {
-                Open: 'bg-status-success text-text-primary font-bold',
-                Launched: 'bg-status-info text-text-primary font-bold',
-                Completed: 'bg-bg-tertiary text-text-primary font-bold',
-                Terminated: 'bg-status-error text-text-primary font-bold',
-              };
-
-              return (
-                <div
-                  key={participant.id}
-                  className="border border-border-primary rounded-lg p-4 hover:bg-bg-tertiary bg-bg-primary transition"
-                >
-                  <div className="flex justify-between items-start">
-                    <Link
-                      href={`/project/${project.id}`}
-                      className="text-lg font-bold text-purple-light hover:text-text-primary hover:underline"
-                    >
-                      {project.title}
-                    </Link>
-                    <div className="flex items-center space-x-2">
-                      {project.status === 'Terminated' && (
-                        <span className="text-xs text-status-error font-bold">
-                          Terminated
-                        </span>
-                      )}
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-bold ${
-                          statusColors[project.status] || 'bg-bg-tertiary text-text-primary'
-                        }`}
-                      >
-                        {project.status}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-text-muted mt-2">
-                    Status: {participant.status} • Created:{' '}
-                    {formatDate(project.created_at)}
-                  </p>
+      {/* My Projects Section */}
+      {hasAnyProjects ? (
+        <div className="bg-bg-secondary rounded-lg p-6 ai-border ai-glow">
+          <h2 className="text-2xl font-bold mb-6 text-pink-primary">My Projects</h2>
+          
+          <div className="space-y-8">
+            {/* Ongoing Projects */}
+            {ongoingProjects.length > 0 && (
+              <section>
+                <h3 className="text-xl font-bold mb-4 text-status-info flex items-center gap-2">
+                  <span className="w-3 h-3 bg-status-info rounded-full"></span>
+                  Ongoing Projects
+                  <span className="text-sm font-normal text-text-muted ml-2">({ongoingProjects.length})</span>
+                </h3>
+                <div className="space-y-3">
+                  {ongoingProjects.map(renderProjectCard)}
                 </div>
-              );
-            })}
+              </section>
+            )}
+
+            {/* Open Projects */}
+            {openProjects.length > 0 && (
+              <section>
+                <h3 className="text-xl font-bold mb-4 text-status-success flex items-center gap-2">
+                  <span className="w-3 h-3 bg-status-success rounded-full"></span>
+                  Open Projects
+                  <span className="text-sm font-normal text-text-muted ml-2">({openProjects.length})</span>
+                </h3>
+                <div className="space-y-3">
+                  {openProjects.map(renderProjectCard)}
+                </div>
+              </section>
+            )}
+
+            {/* Completed Projects */}
+            {completedProjects.length > 0 && (
+              <section>
+                <h3 className="text-xl font-bold mb-4 text-text-muted flex items-center gap-2">
+                  <span className="w-3 h-3 bg-text-muted rounded-full"></span>
+                  Completed Projects
+                  <span className="text-sm font-normal text-text-muted ml-2">({completedProjects.length})</span>
+                </h3>
+                <div className="space-y-3">
+                  {completedProjects.map(renderProjectCard)}
+                </div>
+              </section>
+            )}
+
+            {/* Terminated Projects (only for mentors) */}
+            {terminatedProjects.length > 0 && (
+              <section>
+                <h3 className="text-xl font-bold mb-4 text-status-error flex items-center gap-2">
+                  <span className="w-3 h-3 bg-status-error rounded-full"></span>
+                  Terminated Projects
+                  <span className="text-sm font-normal text-text-muted ml-2">({terminatedProjects.length})</span>
+                </h3>
+                <div className="space-y-3">
+                  {terminatedProjects.map(renderProjectCard)}
+                </div>
+              </section>
+            )}
           </div>
         </div>
-      )}
-
-      {/* Mentee Projects */}
-      {menteeProjects && menteeProjects.length > 0 && (
-        <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6">
-          <h2 className="text-2xl font-bold mb-4 text-pink-primary">Projects as Mentee</h2>
-          <div className="space-y-4">
-            {menteeProjects.map((participant: any) => {
-              const project = participant.project;
-              if (!project) return null;
-
-              const statusColors: Record<string, string> = {
-                Open: 'bg-status-success text-text-primary font-bold',
-                Launched: 'bg-status-info text-text-primary font-bold',
-                Completed: 'bg-bg-tertiary text-text-primary font-bold',
-              };
-
-              return (
-                <div
-                  key={participant.id}
-                  className="border border-border-primary rounded-lg p-4 hover:bg-bg-tertiary bg-bg-primary transition"
-                >
-                  <div className="flex justify-between items-start">
-                    <Link
-                      href={`/project/${project.id}`}
-                      className="text-lg font-bold text-purple-light hover:text-text-primary hover:underline"
-                    >
-                      {project.title}
-                    </Link>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-bold ${
-                        statusColors[project.status] || 'bg-bg-tertiary text-text-primary'
-                      }`}
-                    >
-                      {project.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-text-muted mt-2">
-                    Status: {participant.status} • Created:{' '}
-                    {formatDate(project.created_at)}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+      ) : (
+        <div className="bg-bg-secondary rounded-lg p-6 text-center ai-border">
+          <p className="text-text-muted">No project history</p>
         </div>
       )}
-
-      {(!mentorProjects || mentorProjects.length === 0) &&
-        (!menteeProjects || menteeProjects.length === 0) && (
-          <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6 text-center">
-            <p className="text-text-muted">No project history</p>
-          </div>
-        )}
     </div>
   );
 }

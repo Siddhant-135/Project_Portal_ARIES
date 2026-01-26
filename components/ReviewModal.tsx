@@ -46,8 +46,8 @@ export default function ReviewModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-      <div className="bg-bg-secondary rounded-lg border border-border-primary p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-bg-secondary rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto ai-border ai-glow shadow-xl">
         <h2 className="text-2xl font-bold mb-4 text-text-primary">
           Exit Review for {studentName}
         </h2>
@@ -61,7 +61,7 @@ export default function ReviewModal({
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
               rows={8}
-              className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
+              className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary ai-border"
               placeholder="Write your review here..."
             />
             <div className="mt-2 flex justify-between text-sm">

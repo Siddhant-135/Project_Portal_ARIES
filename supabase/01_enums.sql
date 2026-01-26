@@ -18,8 +18,8 @@ BEGIN
     CREATE TYPE participant_role AS ENUM ('Mentor', 'Mentee');
   END IF;
 
-  -- Create participant_status enum
+  -- Create participant_status enum (Pending = waiting for mentor acceptance)
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'participant_status') THEN
-    CREATE TYPE participant_status AS ENUM ('Active', 'Dropped', 'Discharged');
+    CREATE TYPE participant_status AS ENUM ('Pending', 'Active', 'Dropped', 'Discharged');
   END IF;
 END $$;

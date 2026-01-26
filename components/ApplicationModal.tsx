@@ -28,10 +28,14 @@ export default function ApplicationModal({
     e.preventDefault();
     setError(null);
 
-    if (!prerequisitesNotes.trim()) {
-      setError('Related experience is required (enter N/A if none)');
+    // Must check prerequisites met checkbox to apply
+    if (!prerequisitesMet) {
+      setError('Prerequisites not met, cannot apply');
       return;
     }
+
+    // If prerequisites met but notes empty, auto-fill with "N/A"
+    const finalNotes = prerequisitesNotes.trim() || 'N/A';
 
     if (notesWordCount > maxNotesWords) {
       setError(`Related experience must be ${maxNotesWords} words or less`);
@@ -47,7 +51,7 @@ export default function ApplicationModal({
     const result = await applyToProject(
       projectId,
       prerequisitesMet,
-      prerequisitesNotes,
+      finalNotes,
       consentToShare
     );
 
@@ -62,8 +66,8 @@ export default function ApplicationModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-      <div className="bg-bg-secondary rounded-lg border border-border-primary p-6 max-w-md w-full mx-4 shadow-xl">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-bg-secondary rounded-lg p-6 max-w-md w-full mx-4 ai-border ai-glow shadow-xl">
         <h2 className="text-2xl font-bold mb-4 text-text-primary">Apply to Project</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -83,15 +87,16 @@ export default function ApplicationModal({
               </label>
               <div>
                 <label className="block text-sm font-bold text-text-primary mb-1">
-                  Mention related experience (N/A if none) (max {maxNotesWords} words) *
+                  Mention related experience (N/A if none) (max {maxNotesWords} words)
+                  {prerequisitesMet && <span className="text-text-muted text-xs ml-1">(optional, auto-fills N/A if empty)</span>}
                 </label>
                 <textarea
                   value={prerequisitesNotes}
                   onChange={(e) => setPrerequisitesNotes(e.target.value)}
-                  required
+                  disabled={!prerequisitesMet}
                   rows={3}
-                  className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
-                  placeholder="Enter your related experience or N/A if none..."
+                  className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary disabled:opacity-50 disabled:cursor-not-allowed ai-border"
+                  placeholder={prerequisitesMet ? "Enter your related experience or leave empty for N/A..." : "Check prerequisites met to enable this field"}
                 />
                 <p className={`text-sm mt-1 font-bold ${notesWordCount > maxNotesWords ? 'text-status-error' : 'text-text-muted'}`}>
                   {notesWordCount} / {maxNotesWords} words
@@ -102,7 +107,7 @@ export default function ApplicationModal({
 
           <div>
             <label className="flex items-center text-text-secondary">
-              <input
+                <input
                 type="checkbox"
                 checked={consentToShare}
                 onChange={(e) => setConsentToShare(e.target.checked)}
@@ -130,7 +135,7 @@ export default function ApplicationModal({
             </button>
             <button
               type="submit"
-              disabled={loading || !prerequisitesNotes.trim() || notesWordCount > maxNotesWords || !consentToShare}
+              disabled={loading || !prerequisitesMet || notesWordCount > maxNotesWords || !consentToShare}
               className="px-4 py-2 bg-purple-primary text-text-primary hover:bg-purple-secondary rounded transition disabled:opacity-50 font-medium"
             >
               {loading ? 'Applying...' : 'Apply'}

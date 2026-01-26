@@ -102,10 +102,10 @@ export async function GET(request: Request) {
       return response;
     } else {
       console.error('OAuth Error:', error);
-      return NextResponse.redirect(`${origin}/auth/login?error=Authentication failed: ${error.message}`);
+      return NextResponse.redirect(`${origin}/auth/login?error=Authentication failed. Please try again.`);
     }
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/login?error=Authentication failed: No code provided`);
+  return NextResponse.redirect(`${origin}/auth/login?error=Authentication failed. Please try again.`);
 }
