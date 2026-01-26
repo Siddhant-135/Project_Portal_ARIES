@@ -24,7 +24,7 @@ export default async function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8 text-purple-primary">Admin Panel</h1>
+      <h1 className="text-3xl font-bold mb-8 text-text-primary">Admin Panel</h1>
       <AdminPanel reviews={reviews || []} />
     </div>
   );

@@ -48,7 +48,7 @@ export default function ReviewModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
       <div className="bg-bg-secondary rounded-lg border border-border-primary p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
-        <h2 className="text-2xl font-bold mb-4 text-purple-primary">
+        <h2 className="text-2xl font-bold mb-4 text-text-primary">
           Exit Review for {studentName}
         </h2>
 

@@ -54,7 +54,7 @@ export default function AdminPanel({ reviews }: AdminPanelProps) {
     <div className="space-y-8">
       {/* User Search and Role Management */}
       <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6">
-        <h2 className="text-2xl font-bold mb-4 text-purple-primary">User Management</h2>
+        <h2 className="text-2xl font-bold mb-4 text-text-primary">User Management</h2>
         
         <form onSubmit={handleSearch} className="mb-4">
           <div className="flex space-x-2">
@@ -121,7 +121,7 @@ export default function AdminPanel({ reviews }: AdminPanelProps) {
 
       {/* Master Review Feed */}
       <div className="bg-bg-secondary rounded-lg shadow-lg border border-border-primary p-6">
-        <h2 className="text-2xl font-bold mb-4 text-purple-primary">Master Review Feed</h2>
+        <h2 className="text-2xl font-bold mb-4 text-text-primary">Master Review Feed</h2>
         
         {reviews.length > 0 ? (
           <div className="space-y-4">
