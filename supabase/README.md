@@ -70,6 +70,17 @@ WHERE email = 'your-admin-email@iitd.ac.in';
 
 Only this first Admin (or other Admins) can then promote additional users to Admin.
 
+## Creating Profiles for Existing Users
+
+If you have users in `auth.users` but no corresponding profiles, run:
+
+```sql
+-- If you have existing users without profiles, you can create a function to handle this
+-- See the ensure_user_profile function in 04_functions.sql
+```
+
+This will create profiles for all users who don't have one yet.
+
 ## Updating Existing Database
 
 If you have an existing database, you may need to:

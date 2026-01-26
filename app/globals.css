@@ -3,53 +3,79 @@
 @tailwind utilities;
 
 /* ============================================
-   COLOR SYSTEM - CUSTOMIZE COLORS HERE
-   ============================================
-   All primary colors are defined below.
-   Change these values to update the entire app's color scheme.
-*/
+   COLOR SYSTEM — DARK AI / CYBER VIBE
+   ============================================ */
 :root {
-  /* Dark Background Colors */
-  --bg-primary: #0f0a1a;        /* Main dark background */
-  --bg-secondary: #1a0f2e;      /* Secondary dark background (cards, panels) */
-  --bg-tertiary: #251a3a;        /* Tertiary dark background (hover states) */
-  
-  /* Purple Accent Colors */
-  --purple-primary: #9333ea;     /* Primary purple for buttons, links */
-  --purple-secondary: #7c3aed;   /* Secondary purple (hover states) */
-  --purple-light: #a855f7;       /* Light purple for highlights */
-  --purple-dark: #6b21a8;        /* Dark purple for borders, shadows */
-  
-  /* Pink Accent Colors */
-  --pink-primary: #ec4899;       /* Primary pink for accents */
-  --pink-secondary: #db2777;     /* Secondary pink (hover states) */
-  --pink-light: #f472b6;         /* Light pink for highlights */
-  --pink-dark: #be185d;          /* Dark pink for borders */
-  
-  /* Text Colors */
-  --text-primary: #ffffff;       /* Primary text (white) */
-  --text-secondary: #e5e7eb;    /* Secondary text (light gray) */
-  --text-muted: #9ca3af;         /* Muted text (gray) */
-  
-  /* Status Colors */
-  --status-success: #10b981;     /* Green for success states */
-  --status-warning: #f59e0b;     /* Orange for warnings */
-  --status-error: #ef4444;       /* Red for errors */
-  --status-info: #3b82f6;        /* Blue for info */
-  
-  /* Border Colors */
-  --border-primary: #4b5563;     /* Primary border color */
-  --border-secondary: #374151;   /* Secondary border color */
+  /* Ultra-Dark Backgrounds */
+  --bg-primary: #07030f;        /* Near-black, AI void */
+  --bg-secondary: #0d0820;      /* Panels, cards */
+  --bg-tertiary: #140c2b;       /* Hover / elevated surfaces */
+
+  /* Core Neon Purple (AI Identity) */
+  --purple-primary: #923be4;    /* Neon violet */
+  --purple-secondary: #9333ea;  /* Hover / active */
+  --purple-light: #c084fc;      /* Glow highlights */
+  --purple-dark: #5b189a;       /* Borders, depth */
+
+  /* Magenta / Pink Accents (Danger / Energy) */
+  --pink-primary: #de2089;      /* Sharper, more aggressive */
+  --pink-secondary: #e11d48;
+  --pink-light: #fb7185;
+  --pink-dark: #9f1239;
+
+  /* Text — Cold & Synthetic */
+  --text-primary: #f9fafb;      /* Almost white, not pure */
+  --text-secondary: #c7c9d1;    /* Cool gray */
+  --text-muted: #8b8fa3;        /* Desaturated, machine-like */
+
+  /* Status Colors — Saturated & Sharp */
+  --status-success: #00f5a0;    /* Neon green */
+  --status-warning: #facc15;    /* Electric amber */
+  --status-error: #ff2e63;      /* Hot red-pink */
+  --status-info: #38bdf8;       /* Cyan blue */
+
+  /* Borders & Dividers */
+  --border-primary: #2a2342;    /* Soft but visible */
+  --border-secondary: #1c1633;
+
+  /* Glow Helpers (Optional but 🔥) */
+  --glow-purple: 0 0 20px rgba(168, 85, 247, 0.35);
+  --glow-pink: 0 0 20px rgba(244, 63, 94, 0.35);
 }
 
 body {
   color: var(--text-primary);
-  background: var(--bg-primary);
-  font-family: Arial, Helvetica, sans-serif;
+  background: radial-gradient(
+    circle at top,
+    #0b0618 0%,
+    var(--bg-primary) 45%
+  );
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: 0.01em;
 }
 
+/* ============================================
+   OPTIONAL AI-STYLE UTILITIES
+   ============================================ */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .ai-glow {
+    box-shadow: var(--glow-purple);
+  }
+
+  .ai-glow-pink {
+    box-shadow: var(--glow-pink);
+  }
+
+  .ai-border {
+    border: 1px solid var(--border-primary);
+    background: linear-gradient(
+      180deg,
+      rgba(255,255,255,0.03),
+      rgba(255,255,255,0.0)
+    );
   }
 }

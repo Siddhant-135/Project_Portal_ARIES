@@ -36,10 +36,41 @@ BEGIN
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+    COALESCE(
+      NEW.raw_user_meta_data->>'full_name',
+      NEW.user_metadata->>'full_name',
+      split_part(NEW.email, '@', 1)
+    ),
     'Student'
-  );
+  )
+  ON CONFLICT (id) DO NOTHING; -- Prevent errors if profile already exists
   RETURN NEW;
+EXCEPTION
+  WHEN others THEN
+    -- Log error but don't fail the user creation
+    RAISE WARNING 'Failed to create profile for user %: %', NEW.id, SQLERRM;
+    RETURN NEW;
+END;
+$$ language 'plpgsql' SECURITY DEFINER;
+
+-- Function to ensure profile exists (can be called manually)
+CREATE OR REPLACE FUNCTION ensure_user_profile(user_id UUID)
+RETURNS void AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, role)
+  SELECT 
+    au.id,
+    au.email,
+    COALESCE(
+      au.raw_user_meta_data->>'full_name',
+      au.user_metadata->>'full_name',
+      split_part(au.email, '@', 1)
+    ),
+    'Student'
+  FROM auth.users au
+  WHERE au.id = user_id
+    AND NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = user_id)
+  ON CONFLICT (id) DO NOTHING;
 END;
 $$ language 'plpgsql' SECURITY DEFINER;
 

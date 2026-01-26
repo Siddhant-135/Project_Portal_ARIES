@@ -25,7 +25,30 @@ export default async function RootLayout({
       .select('*')
       .eq('id', user.id)
       .single();
-    profile = data;
+    
+    // If user exists but profile doesn't, create it
+    if (!data) {
+      // Try to create profile using RPC function
+      await supabase.rpc('ensure_user_profile', { user_id: user.id });
+      
+      // Try direct insert as fallback
+      await supabase.from('profiles').insert({
+        id: user.id,
+        email: user.email!,
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        role: 'Student',
+      });
+      
+      // Fetch again
+      const { data: newProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      profile = newProfile;
+    } else {
+      profile = data;
+    }
   }
 
   return (
