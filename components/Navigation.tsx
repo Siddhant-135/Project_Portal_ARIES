@@ -38,7 +38,7 @@ export default function Navigation({ user, profile }: NavigationProps) {
                 </Link>
                 {profile && (
                   <Link
-                    href={`/profile/${user.id}`}
+                    href={`/profile/${profile.username}`}
                     className="text-text-secondary hover:text-purple-light transition font-medium"
                   >
                     My Profile

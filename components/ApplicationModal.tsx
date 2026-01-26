@@ -21,9 +21,22 @@ export default function ApplicationModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const notesWordCount = countWords(prerequisitesNotes);
+  const maxNotesWords = 50;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!prerequisitesNotes.trim()) {
+      setError('Related experience is required (enter N/A if none)');
+      return;
+    }
+
+    if (notesWordCount > maxNotesWords) {
+      setError(`Related experience must be ${maxNotesWords} words or less`);
+      return;
+    }
 
     if (!consentToShare) {
       setError('Consent to share profile is required');
@@ -69,16 +82,20 @@ export default function ApplicationModal({
                 <span>I have met the prerequisites for this project</span>
               </label>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Additional Notes (optional)
+                <label className="block text-sm font-bold text-text-primary mb-1">
+                  Mention related experience (N/A if none) (max {maxNotesWords} words) *
                 </label>
                 <textarea
                   value={prerequisitesNotes}
                   onChange={(e) => setPrerequisitesNotes(e.target.value)}
+                  required
                   rows={3}
                   className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
-                  placeholder="Any additional information about prerequisites..."
+                  placeholder="Enter your related experience or N/A if none..."
                 />
+                <p className={`text-sm mt-1 font-bold ${notesWordCount > maxNotesWords ? 'text-status-error' : 'text-text-muted'}`}>
+                  {notesWordCount} / {maxNotesWords} words
+                </p>
               </div>
             </div>
           </div>
@@ -113,7 +130,7 @@ export default function ApplicationModal({
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !prerequisitesNotes.trim() || notesWordCount > maxNotesWords || !consentToShare}
               className="px-4 py-2 bg-purple-primary text-text-primary hover:bg-purple-secondary rounded transition disabled:opacity-50 font-medium"
             >
               {loading ? 'Applying...' : 'Apply'}

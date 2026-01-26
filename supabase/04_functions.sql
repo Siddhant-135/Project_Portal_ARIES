@@ -10,6 +10,18 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Function to get current username from JWT email (part before @)
+CREATE OR REPLACE FUNCTION current_username()
+RETURNS TEXT AS $$
+  SELECT split_part((auth.jwt() ->> 'email'), '@', 1);
+$$ language 'sql' STABLE;
+
+-- Function to get current profile id based on username
+CREATE OR REPLACE FUNCTION current_profile_id()
+RETURNS UUID AS $$
+  SELECT id FROM profiles WHERE username = current_username() LIMIT 1;
+$$ language 'sql' STABLE SECURITY DEFINER;
+
 -- Function to prevent self-promotion to Admin
 CREATE OR REPLACE FUNCTION prevent_self_admin_promotion()
 RETURNS TRIGGER AS $$
@@ -23,7 +35,7 @@ BEGIN
       RETURN NEW;
     ELSIF NOT EXISTS (
       SELECT 1 FROM profiles 
-      WHERE id = auth.uid() AND role = 'Admin'
+      WHERE id = current_profile_id() AND role = 'Admin'
     ) THEN
       RAISE EXCEPTION 'Only existing Admins can promote users to Admin role';
     END IF;

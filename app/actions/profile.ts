@@ -11,12 +11,16 @@ export async function ensureProfileExists() {
   if (!user) {
     return { error: 'Not authenticated' };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
 
   // Check if profile exists
   const { data: existingProfile } = await supabase
     .from('profiles')
     .select('id')
-    .eq('id', user.id)
+    .eq('username', username)
     .single();
 
   if (existingProfile) {
@@ -33,6 +37,7 @@ export async function ensureProfileExists() {
     // Fallback: try direct insert
     const { error: insertError } = await supabase.from('profiles').insert({
       id: user.id,
+      username,
       email: user.email!,
       full_name: user.email?.split('@')[0] || 'User',
       role: 'Student',

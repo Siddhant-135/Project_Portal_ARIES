@@ -11,11 +11,15 @@ export default async function NewProjectPage() {
   if (!user) {
     redirect('/auth/login');
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    redirect('/');
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', user.id)
+    .eq('username', username)
     .single();
 
   if (!profile || !['ARIES_Member', 'Admin'].includes(profile.role)) {

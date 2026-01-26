@@ -14,11 +14,15 @@ export async function createProject(formData: FormData) {
   if (!user) {
     return { error: 'Not authenticated' };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
-    .eq('id', user.id)
+    .select('id, role')
+    .eq('username', username)
     .single();
 
   if (!profile || !['ARIES_Member', 'Admin'].includes(profile.role)) {
@@ -34,14 +38,15 @@ export async function createProject(formData: FormData) {
   const doc_link = formData.get('doc_link') as string | null;
 
   // Word count validation
-  if (countWords(description) > 200) {
-    return { error: 'Description must be 200 words or less' };
+  const maxWords = 50;
+  if (countWords(description) > maxWords) {
+    return { error: `Description must be ${maxWords} words or less` };
   }
-  if (countWords(prerequisites) > 200) {
-    return { error: 'Prerequisites must be 200 words or less' };
+  if (countWords(prerequisites) > maxWords) {
+    return { error: `Prerequisites must be ${maxWords} words or less` };
   }
-  if (countWords(learning_objectives) > 200) {
-    return { error: 'Learning objectives must be 200 words or less' };
+  if (countWords(learning_objectives) > maxWords) {
+    return { error: `Learning objectives must be ${maxWords} words or less` };
   }
 
   const { data: project, error } = await supabase
@@ -54,7 +59,7 @@ export async function createProject(formData: FormData) {
       max_students,
       codebase_link,
       doc_link,
-      created_by: user.id,
+      created_by: profile.id,
     })
     .select()
     .single();
@@ -66,7 +71,7 @@ export async function createProject(formData: FormData) {
   // Add creator as mentor
   await supabase.from('project_participants').insert({
     project_id: project.id,
-    user_id: user.id,
+    user_id: profile.id,
     role: 'Mentor',
     status: 'Active',
     consent_to_share: true,
@@ -89,6 +94,18 @@ export async function updateProjectStatus(
   if (!user) {
     return { error: 'Not authenticated' };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .single();
+  if (!profile) {
+    return { error: 'Profile not found' };
+  }
 
   const { data: project } = await supabase
     .from('projects')
@@ -96,7 +113,7 @@ export async function updateProjectStatus(
     .eq('id', projectId)
     .single();
 
-  if (!project || project.created_by !== user.id) {
+  if (!project || project.created_by !== profile.id) {
     return { error: 'Unauthorized: Only project creator can update status' };
   }
 
@@ -128,6 +145,18 @@ export async function deleteProject(projectId: string) {
   if (!user) {
     return { error: 'Not authenticated' };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .single();
+  if (!profile) {
+    return { error: 'Profile not found' };
+  }
 
   const { data: project } = await supabase
     .from('projects')
@@ -135,7 +164,7 @@ export async function deleteProject(projectId: string) {
     .eq('id', projectId)
     .single();
 
-  if (!project || project.created_by !== user.id) {
+  if (!project || project.created_by !== profile.id) {
     return { error: 'Unauthorized: Only project creator can delete project' };
   }
 
@@ -145,7 +174,7 @@ export async function deleteProject(projectId: string) {
     .select('id')
     .eq('project_id', projectId)
     .eq('status', 'Active')
-    .neq('user_id', user.id); // Exclude the creator
+    .neq('user_id', profile.id); // Exclude the creator
 
   if (participants && participants.length > 0) {
     // Set status to Terminated instead of deleting

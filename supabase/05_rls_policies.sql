@@ -49,8 +49,8 @@ CREATE POLICY "Users can insert own profile" ON profiles
 -- Note: The trigger function will prevent self-promotion to Admin
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE 
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
+  USING (current_profile_id() = id)
+  WITH CHECK (current_profile_id() = id);
 
 -- Admins can update any profile (for role management)
 -- Note: The trigger function will prevent self-promotion to Admin
@@ -59,13 +59,13 @@ CREATE POLICY "Admins can update any profile" ON profiles
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'Admin'
+      WHERE id = current_profile_id() AND role = 'Admin'
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'Admin'
+      WHERE id = current_profile_id() AND role = 'Admin'
     )
   );
 
@@ -75,20 +75,20 @@ CREATE POLICY "Admins can update any profile" ON profiles
 
 -- Everyone can view Open and Completed projects, or projects they created
 CREATE POLICY "Open and Completed projects are viewable by everyone" ON projects
-  FOR SELECT USING (status IN ('Open', 'Completed') OR created_by = auth.uid());
+  FOR SELECT USING (status IN ('Open', 'Completed') OR created_by = current_profile_id());
 
 -- ARIES Members and Admins can create projects
 CREATE POLICY "ARIES Members and Admins can create projects" ON projects
   FOR INSERT WITH CHECK (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role IN ('ARIES_Member', 'Admin')
+      WHERE id = current_profile_id() AND role IN ('ARIES_Member', 'Admin')
     )
   );
 
 -- Project creators can update their projects
 CREATE POLICY "Project creators can update their projects" ON projects
-  FOR UPDATE USING (created_by = auth.uid());
+  FOR UPDATE USING (created_by = current_profile_id());
 
 -- ============================================
 -- RLS Policies for project_participants
@@ -97,20 +97,20 @@ CREATE POLICY "Project creators can update their projects" ON projects
 -- Users can view participants of projects they're involved in or Open/Completed projects
 CREATE POLICY "Participants are viewable by project members or for Open/Completed projects" ON project_participants
   FOR SELECT USING (
-    user_id = auth.uid() OR
+    user_id = current_profile_id() OR
     EXISTS (
       SELECT 1 FROM projects
-      WHERE id = project_id AND (status IN ('Open', 'Completed') OR created_by = auth.uid())
+      WHERE id = project_id AND (status IN ('Open', 'Completed') OR created_by = current_profile_id())
     )
   );
 
 -- Students can insert their own applications
 CREATE POLICY "Students can apply to projects" ON project_participants
   FOR INSERT WITH CHECK (
-    user_id = auth.uid() AND
+    user_id = current_profile_id() AND
     role = 'Mentee' AND
     EXISTS (
-      SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'Student'
+      SELECT 1 FROM profiles WHERE id = current_profile_id() AND role = 'Student'
     )
   );
 
@@ -120,7 +120,7 @@ CREATE POLICY "Project creators can manage participants" ON project_participants
   FOR UPDATE USING (
     EXISTS (
       SELECT 1 FROM projects
-      WHERE id = project_id AND created_by = auth.uid()
+      WHERE id = project_id AND created_by = current_profile_id()
     )
   );
 
@@ -133,7 +133,7 @@ CREATE POLICY "Only Admins can view reviews" ON reviews
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'Admin'
+      WHERE id = current_profile_id() AND role = 'Admin'
     )
   );
 
@@ -142,7 +142,7 @@ CREATE POLICY "Only Admins can view reviews" ON reviews
 -- and that the student is a mentee in that project
 CREATE POLICY "Mentors can create reviews" ON reviews
   FOR INSERT WITH CHECK (
-    mentor_id = auth.uid() AND
+    mentor_id = current_profile_id() AND
     -- Verify mentor is actually a mentor for this project
     EXISTS (
       SELECT 1 FROM project_participants

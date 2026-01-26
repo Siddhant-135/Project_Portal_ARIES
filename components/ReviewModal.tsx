@@ -18,7 +18,7 @@ export default function ReviewModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const wordCount = countWords(reviewText);
-  const maxWords = 100;
+  const maxWords = 30;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

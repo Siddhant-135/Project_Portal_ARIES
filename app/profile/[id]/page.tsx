@@ -8,12 +8,13 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const currentUsername = user?.email?.split('@')[0];
 
   // Get profile
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', params.id)
+    .eq('username', params.id)
     .single();
 
   if (profileError || !profile) {
@@ -24,18 +25,18 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   const { data: mentorProjects } = await supabase
     .from('project_participants')
     .select('*, project:projects(*, creator:profiles!projects_created_by_fkey(*))')
-    .eq('user_id', params.id)
+    .eq('user_id', profile.id)
     .eq('role', 'Mentor');
 
   // Get user's projects as mentee (excluding Terminated)
   const { data: menteeProjects } = await supabase
     .from('project_participants')
     .select('*, project:projects!inner(*, creator:profiles!projects_created_by_fkey(*))')
-    .eq('user_id', params.id)
+    .eq('user_id', profile.id)
     .eq('role', 'Mentee')
     .not('project.status', 'eq', 'Terminated');
 
-  const isOwnProfile = user?.id === params.id;
+  const isOwnProfile = currentUsername === params.id;
 
   return (
     <div className="max-w-4xl mx-auto">

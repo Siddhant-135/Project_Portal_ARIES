@@ -17,10 +17,23 @@ export async function createReview(
   if (!user) {
     return { error: 'Not authenticated' };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .single();
+  if (!profile) {
+    return { error: 'Profile not found' };
+  }
 
   // Word count validation
-  if (countWords(reviewText) > 100) {
-    return { error: 'Review must be 100 words or less' };
+  const maxWords = 30;
+  if (countWords(reviewText) > maxWords) {
+    return { error: `Review must be ${maxWords} words or less` };
   }
 
   // Verify user is mentor of this project
@@ -28,7 +41,7 @@ export async function createReview(
     .from('project_participants')
     .select('role')
     .eq('project_id', projectId)
-    .eq('user_id', user.id)
+    .eq('user_id', profile.id)
     .eq('role', 'Mentor')
     .single();
 
@@ -39,7 +52,7 @@ export async function createReview(
   const { error } = await supabase.from('reviews').insert({
     project_id: projectId,
     student_id: studentId,
-    mentor_id: user.id,
+    mentor_id: profile.id,
     review_text: reviewText,
   });
 

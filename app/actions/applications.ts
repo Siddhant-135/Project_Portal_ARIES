@@ -40,19 +40,32 @@ export async function applyToProject(
   if (!user) {
     return { error: 'Not authenticated' };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
-    .eq('id', user.id)
+    .select('id, role')
+    .eq('username', username)
     .single();
 
   if (!profile || profile.role !== 'Student') {
     return { error: 'Only Students can apply to projects' };
   }
 
+  // Validate prerequisites_notes (required, 50 words max)
+  if (!prerequisitesNotes || !prerequisitesNotes.trim()) {
+    return { error: 'Related experience is required (enter N/A if none)' };
+  }
+  const maxNotesWords = 50;
+  if (countWords(prerequisitesNotes) > maxNotesWords) {
+    return { error: `Related experience must be ${maxNotesWords} words or less` };
+  }
+
   // Check 3-slot rule
-  const activeSlots = await getActiveSlots(user.id);
+  const activeSlots = await getActiveSlots(profile.id);
   if (activeSlots >= 3) {
     return { error: 'You have reached the maximum of 3 active project slots' };
   }
@@ -77,7 +90,7 @@ export async function applyToProject(
     .from('project_participants')
     .select('id')
     .eq('project_id', projectId)
-    .eq('user_id', user.id)
+    .eq('user_id', profile.id)
     .single();
 
   if (existing) {
@@ -97,11 +110,11 @@ export async function applyToProject(
 
   const { error } = await supabase.from('project_participants').insert({
     project_id: projectId,
-    user_id: user.id,
+    user_id: profile.id,
     role: 'Mentee',
     status: 'Active',
     prerequisites_met: prerequisitesMet,
-    prerequisites_notes: prerequisitesNotes || null,
+    prerequisites_notes: prerequisitesNotes.trim(),
     consent_to_share: consentToShare,
   });
 
@@ -124,6 +137,21 @@ export async function acceptApplication(participantId: string) {
     return { error: 'Not authenticated' };
   }
 
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .single();
+
+  if (!profile) {
+    return { error: 'Profile not found' };
+  }
+
   // Get participant and project info
   const { data: participant } = await supabase
     .from('project_participants')
@@ -131,7 +159,7 @@ export async function acceptApplication(participantId: string) {
     .eq('id', participantId)
     .single();
 
-  if (!participant || (participant as any).projects.created_by !== user.id) {
+  if (!participant || (participant as any).projects.created_by !== profile.id) {
     return { error: 'Unauthorized: Only project creator can accept applications' };
   }
 
@@ -163,6 +191,18 @@ export async function rejectApplication(participantId: string) {
   if (!user) {
     return { error: 'Not authenticated' };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .single();
+  if (!profile) {
+    return { error: 'Profile not found' };
+  }
 
   const { data: participant } = await supabase
     .from('project_participants')
@@ -170,7 +210,7 @@ export async function rejectApplication(participantId: string) {
     .eq('id', participantId)
     .single();
 
-  if (!participant || (participant as any).projects.created_by !== user.id) {
+  if (!participant || (participant as any).projects.created_by !== profile.id) {
     return { error: 'Unauthorized: Only project creator can reject applications' };
   }
 
@@ -200,6 +240,18 @@ export async function updateParticipantStatus(
   if (!user) {
     return { error: 'Not authenticated' };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .single();
+  if (!profile) {
+    return { error: 'Profile not found' };
+  }
 
   const { data: participant } = await supabase
     .from('project_participants')
@@ -207,7 +259,7 @@ export async function updateParticipantStatus(
     .eq('id', participantId)
     .single();
 
-  if (!participant || (participant as any).projects.created_by !== user.id) {
+  if (!participant || (participant as any).projects.created_by !== profile.id) {
     return { error: 'Unauthorized: Only project creator can update participant status' };
   }
 
@@ -217,8 +269,9 @@ export async function updateParticipantStatus(
   }
 
   if (reviewText) {
-    if (countWords(reviewText) > 100) {
-      return { error: 'Review must be 100 words or less' };
+    const maxReviewWords = 30;
+    if (countWords(reviewText) > maxReviewWords) {
+      return { error: `Review must be ${maxReviewWords} words or less` };
     }
   }
 
@@ -236,7 +289,7 @@ export async function updateParticipantStatus(
     const { error: reviewError } = await supabase.from('reviews').insert({
       project_id: (participant as any).project_id,
       student_id: (participant as any).user_id,
-      mentor_id: user.id,
+      mentor_id: profile.id,
       review_text: reviewText,
     });
 
@@ -246,6 +299,13 @@ export async function updateParticipantStatus(
   }
 
   revalidatePath(`/project/${(participant as any).project_id}`);
-  revalidatePath(`/profile/${(participant as any).user_id}`);
+  const { data: participantProfile } = await supabase
+    .from('profiles')
+    .select('username')
+    .eq('id', (participant as any).user_id)
+    .single();
+  if (participantProfile?.username) {
+    revalidatePath(`/profile/${participantProfile.username}`);
+  }
   return { success: true };
 }

@@ -32,19 +32,22 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   let profile = null;
   let activeSlots = 0;
   if (user) {
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    profile = profileData;
+    const username = user.email?.split('@')[0];
+    if (username) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('username', username)
+        .single();
+      profile = profileData;
+    }
 
     if (profile?.role === 'Student') {
-      activeSlots = await getActiveSlots(user.id);
+      activeSlots = await getActiveSlots(profile.id);
     }
   }
 
-  const isMentor = user?.id === project.created_by;
+  const isMentor = profile?.id === project.created_by;
   const isStudent = profile?.role === 'Student' && !isMentor;
 
   return (

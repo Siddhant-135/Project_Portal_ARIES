@@ -134,8 +134,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Word Count Limits
 
-- **Project Details**: 200 words max (description, prerequisites, learning objectives)
-- **Reviews**: 100 words max
+- **Project Details**: 50 words max (description, prerequisites, learning objectives)
+- **Related Experience**: 50 words max (required field for applications, enter "N/A" if none)
+- **Reviews**: 30 words max
 
 ## Database Schema
 

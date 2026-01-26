@@ -55,7 +55,7 @@ The `profiles` table now includes a `username` field (extracted from email, part
 - When a user logs in, the system extracts the username (part before `@`)
 - If a profile with that username already exists, the existing profile is used and its email is updated
 - If no profile exists with that username, a new profile is created
-- The application finds profiles by username, not by auth.users.id
+- The application and RLS policies resolve access by username (derived from the JWT email), not by `auth.users.id`
 
 **Migration**: If you have an existing database, run `migration_add_username.sql` to add the username column to existing profiles.
 
@@ -124,7 +124,10 @@ If you have an existing database, you may need to:
    ALTER TABLE profiles DROP CONSTRAINT IF EXISTS email_iitd;
    ```
 
-3. **Add username field** (if not already present):
+3. **Add prerequisites columns** (if not already present):
+   Run `migration_add_prerequisites_columns.sql` to add the `prerequisites_met` and `prerequisites_notes` columns to the `project_participants` table.
+
+4. **Add username field** (if not already present):
    Run `migration_add_username.sql` to add the username column to existing profiles.
 
 4. **Add reviews constraint**:

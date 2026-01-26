@@ -22,21 +22,22 @@ export default function NewProjectForm() {
   const descWords = countWords(formData.description);
   const prereqWords = countWords(formData.prerequisites);
   const objWords = countWords(formData.learning_objectives);
+  const maxWords = 50;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (descWords > 200) {
-      setError('Description must be 200 words or less');
+    if (descWords > maxWords) {
+      setError(`Description must be ${maxWords} words or less`);
       return;
     }
-    if (prereqWords > 200) {
-      setError('Prerequisites must be 200 words or less');
+    if (prereqWords > maxWords) {
+      setError(`Prerequisites must be ${maxWords} words or less`);
       return;
     }
-    if (objWords > 200) {
-      setError('Learning objectives must be 200 words or less');
+    if (objWords > maxWords) {
+      setError(`Learning objectives must be ${maxWords} words or less`);
       return;
     }
 
@@ -73,7 +74,7 @@ export default function NewProjectForm() {
 
       <div>
         <label className="block text-sm font-bold text-text-primary mb-2">
-          Description (max 200 words) *
+          Description (max {maxWords} words) *
         </label>
         <textarea
           value={formData.description}
@@ -82,14 +83,14 @@ export default function NewProjectForm() {
           rows={6}
           className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
         />
-        <p className={`text-sm mt-1 font-bold ${descWords > 200 ? 'text-status-error' : 'text-text-muted'}`}>
-          {descWords} / 200 words
+        <p className={`text-sm mt-1 font-bold ${descWords > maxWords ? 'text-status-error' : 'text-text-muted'}`}>
+          {descWords} / {maxWords} words
         </p>
       </div>
 
       <div>
         <label className="block text-sm font-bold text-text-primary mb-2">
-          Prerequisites (max 200 words) *
+          Prerequisites (max {maxWords} words) *
         </label>
         <textarea
           value={formData.prerequisites}
@@ -98,14 +99,14 @@ export default function NewProjectForm() {
           rows={6}
           className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
         />
-        <p className={`text-sm mt-1 font-bold ${prereqWords > 200 ? 'text-status-error' : 'text-text-muted'}`}>
-          {prereqWords} / 200 words
+        <p className={`text-sm mt-1 font-bold ${prereqWords > maxWords ? 'text-status-error' : 'text-text-muted'}`}>
+          {prereqWords} / {maxWords} words
         </p>
       </div>
 
       <div>
         <label className="block text-sm font-bold text-text-primary mb-2">
-          Learning Objectives (max 200 words) *
+          Learning Objectives (max {maxWords} words) *
         </label>
         <textarea
           value={formData.learning_objectives}
@@ -116,8 +117,8 @@ export default function NewProjectForm() {
           rows={6}
           className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary"
         />
-        <p className={`text-sm mt-1 font-bold ${objWords > 200 ? 'text-status-error' : 'text-text-muted'}`}>
-          {objWords} / 200 words
+        <p className={`text-sm mt-1 font-bold ${objWords > maxWords ? 'text-status-error' : 'text-text-muted'}`}>
+          {objWords} / {maxWords} words
         </p>
       </div>
 

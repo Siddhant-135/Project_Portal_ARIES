@@ -13,11 +13,15 @@ export async function updateUserRole(userId: string, role: UserRole) {
   if (!user) {
     return { error: 'Not authenticated' };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email' };
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
-    .eq('id', user.id)
+    .select('id, role')
+    .eq('username', username)
     .single();
 
   if (!profile || profile.role !== 'Admin') {
@@ -25,7 +29,7 @@ export async function updateUserRole(userId: string, role: UserRole) {
   }
 
   // Prevent demoting Admin
-  if (role !== 'Admin' && userId === user.id) {
+  if (role !== 'Admin' && profile && userId === profile.id) {
     return { error: 'Cannot demote yourself from Admin' };
   }
 
@@ -51,11 +55,15 @@ export async function searchUsersByEmail(email: string) {
   if (!user) {
     return { error: 'Not authenticated', users: [] };
   }
+  const username = user.email?.split('@')[0];
+  if (!username) {
+    return { error: 'Invalid user email', users: [] };
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', user.id)
+    .eq('username', username)
     .single();
 
   if (!profile || profile.role !== 'Admin') {

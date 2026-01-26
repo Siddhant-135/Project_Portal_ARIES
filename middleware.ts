@@ -63,11 +63,15 @@ export async function middleware(request: NextRequest) {
     if (!user) {
       return NextResponse.redirect(new URL('/', request.url));
     }
+    const username = user.email?.split('@')[0];
+    if (!username) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
 
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('username', username)
       .single();
 
     if (!profile || profile.role !== 'Admin') {
