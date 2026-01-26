@@ -55,25 +55,47 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (user && user.email) {
-        if (!user.email.endsWith('@iitd.ac.in')) {
-          await supabase.auth.signOut();
-          return NextResponse.redirect(`${origin}/auth/login?error=Only @iitd.ac.in emails are allowed`);
-        }
+        // Extract username (part before @) - this is the unique identifier
+        const username = user.email.split('@')[0];
         
-        // Check if profile exists, if not create it
+        // Check if profile exists by username (the unique identifier)
         const { data: existingProfile } = await supabase
           .from('profiles')
-          .select('id')
-          .eq('id', user.id)
+          .select('*')
+          .eq('username', username)
           .single();
 
         if (!existingProfile) {
-           await supabase.from('profiles').insert({
-            id: user.id,
-            email: user.email,
-            full_name: user.user_metadata.full_name || user.email.split('@')[0],
-            role: 'Student', // Default role
-          });
+          // Profile not found by username - create it
+          // Try RPC function first (uses SECURITY DEFINER)
+          await supabase.rpc('ensure_user_profile', { user_id: user.id });
+          
+          // Verify profile was created/updated
+          const { data: profileCheck } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('username', username)
+            .single();
+            
+          if (!profileCheck) {
+            // Fallback: direct insert
+            await supabase.from('profiles').insert({
+              id: user.id,
+              username: username,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || user.user_metadata?.name || username,
+              role: 'Student',
+            });
+          }
+        } else {
+          // Profile exists with this username - update email if it changed
+          // This handles the case where same person logs in with different email domain
+          if (existingProfile.email !== user.email) {
+            await supabase
+              .from('profiles')
+              .update({ email: user.email })
+              .eq('username', username);
+          }
         }
       }
 

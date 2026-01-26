@@ -4,6 +4,7 @@
 -- Profiles table
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username TEXT NOT NULL UNIQUE, -- UNIQUE identifier: part before @ in email (unique per person)
   email TEXT NOT NULL UNIQUE,
   full_name TEXT NOT NULL,
   branch TEXT,
@@ -11,6 +12,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Create index on username for faster lookups
+CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
 
 -- Projects table
 CREATE TABLE IF NOT EXISTS projects (

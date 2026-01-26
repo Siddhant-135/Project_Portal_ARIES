@@ -5,6 +5,7 @@ export type ParticipantStatus = 'Active' | 'Dropped' | 'Discharged';
 
 export interface Profile {
   id: string;
+  username: string;
   email: string;
   full_name: string;
   branch: string | null;

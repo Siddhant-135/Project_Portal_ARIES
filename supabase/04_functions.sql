@@ -35,21 +35,56 @@ $$ language 'plpgsql';
 -- Function to automatically create profile when user signs up
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_username TEXT;
+  v_full_name TEXT;
+  v_existing_profile_id UUID;
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, role)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(
-      NEW.raw_user_meta_data->>'full_name',
-      NEW.user_metadata->>'full_name',
-      split_part(NEW.email, '@', 1)
-    ),
-    'Student'
-  )
-  ON CONFLICT (id) DO NOTHING; -- Prevent errors if profile already exists
+  -- Extract username (part before @)
+  v_username := split_part(NEW.email, '@', 1);
+  v_full_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.user_metadata->>'full_name',
+    v_username
+  );
+  
+  -- Check if a profile with this username already exists
+  SELECT id INTO v_existing_profile_id
+  FROM public.profiles
+  WHERE username = v_username
+  LIMIT 1;
+  
+  IF v_existing_profile_id IS NOT NULL THEN
+    -- Username already exists - this is the same person logging in with different email
+    -- Update the existing profile's email to the new one
+    -- Don't create a new profile - username is the unique identifier
+    UPDATE public.profiles
+    SET email = NEW.email,
+        updated_at = NOW()
+    WHERE id = v_existing_profile_id;
+  ELSE
+    -- New username - create new profile
+    INSERT INTO public.profiles (id, username, email, full_name, role)
+    VALUES (
+      NEW.id,
+      v_username,
+      NEW.email,
+      v_full_name,
+      'Student'
+    )
+    ON CONFLICT (id) DO UPDATE
+      SET email = NEW.email,
+          username = v_username,
+          updated_at = NOW();
+  END IF;
+  
   RETURN NEW;
 EXCEPTION
+  WHEN unique_violation THEN
+    -- If username unique constraint is violated, someone else has this username
+    -- This shouldn't happen, but log it
+    RAISE WARNING 'Username % already exists for a different user', v_username;
+    RETURN NEW;
   WHEN others THEN
     -- Log error but don't fail the user creation
     RAISE WARNING 'Failed to create profile for user %: %', NEW.id, SQLERRM;
@@ -58,23 +93,82 @@ END;
 $$ language 'plpgsql' SECURITY DEFINER;
 
 -- Function to ensure profile exists (can be called manually)
+-- This function finds or creates a profile based on username (the unique identifier)
 CREATE OR REPLACE FUNCTION ensure_user_profile(user_id UUID)
 RETURNS void AS $$
+DECLARE
+  v_user_email TEXT;
+  v_username TEXT;
+  v_full_name TEXT;
+  v_existing_profile_id UUID;
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, role)
-  SELECT 
-    au.id,
-    au.email,
-    COALESCE(
-      au.raw_user_meta_data->>'full_name',
-      au.user_metadata->>'full_name',
-      split_part(au.email, '@', 1)
-    ),
-    'Student'
-  FROM auth.users au
-  WHERE au.id = user_id
-    AND NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = user_id)
-  ON CONFLICT (id) DO NOTHING;
+  SELECT email, 
+         COALESCE(
+           raw_user_meta_data->>'full_name',
+           user_metadata->>'full_name',
+           split_part(email, '@', 1)
+         )
+  INTO v_user_email, v_full_name
+  FROM auth.users
+  WHERE id = user_id;
+  
+  IF v_user_email IS NULL THEN
+    RETURN; -- User not found
+  END IF;
+  
+  -- Extract username (the unique identifier of a person)
+  v_username := split_part(v_user_email, '@', 1);
+  
+  -- Check if profile with this username already exists (username is the unique identifier)
+  SELECT id INTO v_existing_profile_id
+  FROM public.profiles
+  WHERE username = v_username
+  LIMIT 1;
+  
+  IF v_existing_profile_id IS NOT NULL THEN
+    -- Username exists - this is the same person
+    -- Update the existing profile's email to the new one
+    UPDATE public.profiles
+    SET email = v_user_email,
+        updated_at = NOW()
+    WHERE id = v_existing_profile_id;
+  ELSIF EXISTS (SELECT 1 FROM public.profiles WHERE id = user_id) THEN
+    -- Profile exists for this user_id - update email and username if needed
+    UPDATE public.profiles
+    SET email = v_user_email,
+        username = v_username,
+        updated_at = NOW()
+    WHERE id = user_id;
+  ELSE
+    -- New username - create new profile
+    INSERT INTO public.profiles (id, username, email, full_name, role)
+    VALUES (user_id, v_username, v_user_email, v_full_name, 'Student')
+    ON CONFLICT (id) DO UPDATE
+      SET email = v_user_email,
+          username = v_username,
+          updated_at = NOW();
+  END IF;
+END;
+$$ language 'plpgsql' SECURITY DEFINER;
+
+-- Function to get profile by username (for finding profiles across different email domains)
+CREATE OR REPLACE FUNCTION get_profile_by_username(username_param TEXT)
+RETURNS TABLE (
+  id UUID,
+  username TEXT,
+  email TEXT,
+  full_name TEXT,
+  branch TEXT,
+  role user_role,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT p.id, p.username, p.email, p.full_name, p.branch, p.role, p.created_at, p.updated_at
+  FROM public.profiles p
+  WHERE p.username = username_param
+  LIMIT 1;
 END;
 $$ language 'plpgsql' SECURITY DEFINER;
 

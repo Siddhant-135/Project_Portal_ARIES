@@ -19,35 +19,57 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   let profile = null;
-  if (user) {
-    const { data } = await supabase
+  if (user && user.email) {
+    const username = user.email.split('@')[0];
+    
+    // Username is the unique identifier - find profile by username first
+    let { data } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('username', username)
       .single();
     
-    // If user exists but profile doesn't, create it
     if (!data) {
-      // Try to create profile using RPC function
+      // Profile not found by username - create it
       await supabase.rpc('ensure_user_profile', { user_id: user.id });
       
-      // Try direct insert as fallback
-      await supabase.from('profiles').insert({
-        id: user.id,
-        email: user.email!,
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-        role: 'Student',
-      });
-      
-      // Fetch again
+      // Fetch the profile by username (it may have been created or updated)
       const { data: newProfile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('username', username)
         .single();
-      profile = newProfile;
+      
+      if (!newProfile) {
+        // Fallback: direct insert
+        await supabase.from('profiles').insert({
+          id: user.id,
+          username: username,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || username,
+          role: 'Student',
+        });
+        
+        const { data: fallbackProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('username', username)
+          .single();
+        profile = fallbackProfile;
+      } else {
+        profile = newProfile;
+      }
     } else {
       profile = data;
+      
+      // Update email if it changed (handles different email domains for same username)
+      if (data.email !== user.email) {
+        await supabase
+          .from('profiles')
+          .update({ email: user.email })
+          .eq('username', username);
+        profile = { ...data, email: user.email };
+      }
     }
   }
 

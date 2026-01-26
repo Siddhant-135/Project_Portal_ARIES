@@ -48,8 +48,19 @@ The `prerequisites_met` field has been changed from a single TEXT field to:
 - `prerequisites_met` (BOOLEAN) - Whether prerequisites are met
 - `prerequisites_notes` (TEXT) - Additional notes about prerequisites
 
+#### Username Field
+The `profiles` table now includes a `username` field (extracted from email, part before `@`). **Username is UNIQUE** and serves as the unique identifier of a person. This allows the system to treat users with different email domains (e.g., `cs5240469@iitd.ac.in` and `cs5240469@cse.iitd.ac.in`) as the same person, using the same profile.
+
+**How it works**:
+- When a user logs in, the system extracts the username (part before `@`)
+- If a profile with that username already exists, the existing profile is used and its email is updated
+- If no profile exists with that username, a new profile is created
+- The application finds profiles by username, not by auth.users.id
+
+**Migration**: If you have an existing database, run `migration_add_username.sql` to add the username column to existing profiles.
+
 #### Email Constraint
-The email domain constraint has been removed - OAuth handles email validation.
+The email domain constraint has been removed - OAuth handles email validation. The system no longer restricts login to specific email domains, as Microsoft OAuth handles organization verification.
 
 #### Reviews Table
 Added foreign key constraint to ensure mentor is actually a mentor for the project:
@@ -113,7 +124,10 @@ If you have an existing database, you may need to:
    ALTER TABLE profiles DROP CONSTRAINT IF EXISTS email_iitd;
    ```
 
-3. **Add reviews constraint**:
+3. **Add username field** (if not already present):
+   Run `migration_add_username.sql` to add the username column to existing profiles.
+
+4. **Add reviews constraint**:
    ```sql
    ALTER TABLE reviews
    ADD CONSTRAINT reviews_mentor_project_fkey 
