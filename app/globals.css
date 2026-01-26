@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   COLOR SYSTEM - CUSTOMIZE COLORS HERE
+   ============================================
+   All primary colors are defined below.
+   Change these values to update the entire app's color scheme.
+*/
+:root {
+  /* Dark Background Colors */
+  --bg-primary: #0f0a1a;        /* Main dark background */
+  --bg-secondary: #1a0f2e;      /* Secondary dark background (cards, panels) */
+  --bg-tertiary: #251a3a;        /* Tertiary dark background (hover states) */
+  
+  /* Purple Accent Colors */
+  --purple-primary: #9333ea;     /* Primary purple for buttons, links */
+  --purple-secondary: #7c3aed;   /* Secondary purple (hover states) */
+  --purple-light: #a855f7;       /* Light purple for highlights */
+  --purple-dark: #6b21a8;        /* Dark purple for borders, shadows */
+  
+  /* Pink Accent Colors */
+  --pink-primary: #ec4899;       /* Primary pink for accents */
+  --pink-secondary: #db2777;     /* Secondary pink (hover states) */
+  --pink-light: #f472b6;         /* Light pink for highlights */
+  --pink-dark: #be185d;          /* Dark pink for borders */
+  
+  /* Text Colors */
+  --text-primary: #ffffff;       /* Primary text (white) */
+  --text-secondary: #e5e7eb;    /* Secondary text (light gray) */
+  --text-muted: #9ca3af;         /* Muted text (gray) */
+  
+  /* Status Colors */
+  --status-success: #10b981;     /* Green for success states */
+  --status-warning: #f59e0b;     /* Orange for warnings */
+  --status-error: #ef4444;       /* Red for errors */
+  --status-info: #3b82f6;        /* Blue for info */
+  
+  /* Border Colors */
+  --border-primary: #4b5563;     /* Primary border color */
+  --border-secondary: #374151;   /* Secondary border color */
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
