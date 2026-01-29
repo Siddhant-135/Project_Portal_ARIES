@@ -5,7 +5,9 @@ import { cookies } from 'next/headers';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/';
+  const next = searchParams.get('next');
+  const safeNext =
+    next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
   const errorParam = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
 
@@ -16,7 +18,7 @@ export async function GET(request: Request) {
 
   if (code) {
     const cookieStore = cookies();
-    const response = NextResponse.redirect(`${origin}${next}`);
+    const response = NextResponse.redirect(`${origin}${safeNext}`);
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -96,6 +98,10 @@ export async function GET(request: Request) {
               .update({ email: user.email })
               .eq('username', username);
           }
+        }
+
+        if (safeNext === '/') {
+          response.headers.set('Location', `${origin}/profile/${username}`);
         }
       }
 

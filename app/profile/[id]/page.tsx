@@ -143,7 +143,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
             {/* Ongoing Projects */}
             {ongoingProjects.length > 0 && (
               <section>
-                <h3 className="text-xl font-bold mb-4 text-text-primary flex items-center gap-2 px-3 py-2 rounded-lg border border-status-info/40 bg-status-info/10">
+                <h3 className="text-xl font-bold mb-4 text-text-primary flex items-center gap-2 border-l-2 border-status-info pl-3">
                   <span className="w-3 h-3 bg-status-info rounded-full"></span>
                   Ongoing Projects
                   <span className="text-sm font-normal text-text-muted ml-2">({ongoingProjects.length})</span>
@@ -171,8 +171,8 @@ export default async function ProfilePage({ params }: { params: { id: string } }
             {/* Completed Projects */}
             {completedProjects.length > 0 && (
               <section>
-                <h3 className="text-xl font-bold mb-4 text-text-muted flex items-center gap-2">
-                  <span className="w-3 h-3 bg-text-muted rounded-full"></span>
+                <h3 className="text-xl font-bold mb-4 text-text-primary flex items-center gap-2 border-l-2 border-purple-light/70 pl-3">
+                  <span className="w-3 h-3 bg-purple-light/70 rounded-full"></span>
                   Completed Projects
                   <span className="text-sm font-normal text-text-muted ml-2">({completedProjects.length})</span>
                 </h3>

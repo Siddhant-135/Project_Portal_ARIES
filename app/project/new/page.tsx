@@ -10,7 +10,7 @@ export default async function NewProjectPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth/login');
+    redirect('/auth/login?next=/project/new');
   }
   const username = user.email?.split('@')[0];
   if (!username) {

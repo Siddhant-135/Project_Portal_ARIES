@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { createClientBrowser } from '@/lib/supabase/client';
 import { mapSupabaseError } from '@/lib/utils';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const nextParam = searchParams.get('next') ?? '/';
 
   useEffect(() => {
     const errorParam = searchParams.get('error');
@@ -16,6 +18,19 @@ export default function LoginPage() {
       setError(mapSupabaseError(errorParam));
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const checkSessionAndRedirect = async () => {
+      const supabase = createClientBrowser();
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        router.replace(nextParam);
+        router.refresh();
+      }
+    };
+
+    checkSessionAndRedirect();
+  }, [nextParam, router]);
 
   const handleMicrosoftLogin = async () => {
     setLoading(true);
@@ -25,7 +40,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'azure',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextParam)}`,
         scopes: 'email profile',
       },
     });
