@@ -14,7 +14,7 @@ export default async function FeedPage() {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-status-error font-bold">
+        <p className="text-text-primary font-bold underline decoration-status-error decoration-2 underline-offset-4">
           Unable to load projects right now. Please try again.
         </p>
       </div>
@@ -37,7 +37,7 @@ export default async function FeedPage() {
           {/* Open Projects Section */}
           {openProjects.length > 0 && (
             <section>
-              <h2 className="text-2xl font-bold mb-4 text-status-success flex items-center gap-2">
+              <h2 className="text-2xl font-bold mb-4 text-text-primary flex items-center gap-2">
                 <span className="w-3 h-3 bg-status-success rounded-full"></span>
                 Open Projects
                 <span className="text-sm font-normal text-text-muted ml-2">({openProjects.length})</span>
@@ -53,7 +53,7 @@ export default async function FeedPage() {
           {/* Ongoing Projects Section */}
           {ongoingProjects.length > 0 && (
             <section>
-              <h2 className="text-2xl font-bold mb-4 text-status-info flex items-center gap-2">
+              <h2 className="text-2xl font-bold mb-4 text-text-primary flex items-center gap-2 px-3 py-2 rounded-lg border border-status-info/40 bg-status-info/10">
                 <span className="w-3 h-3 bg-status-info rounded-full"></span>
                 Ongoing Projects
                 <span className="text-sm font-normal text-text-muted ml-2">({ongoingProjects.length})</span>

@@ -65,14 +65,20 @@ export default function ReviewModal({
               placeholder="Write your review here..."
             />
             <div className="mt-2 flex justify-between text-sm">
-              <span className={wordCount > maxWords ? 'text-status-error font-bold' : 'text-text-muted'}>
+              <span
+                className={
+                  wordCount > maxWords
+                    ? 'text-text-primary font-bold underline decoration-status-error decoration-2 underline-offset-4'
+                    : 'text-text-muted'
+                }
+              >
                 {wordCount} / {maxWords} words
               </span>
             </div>
           </div>
 
           {error && (
-            <div className="bg-status-error/20 border border-status-error text-status-error px-4 py-3 rounded">
+            <div className="bg-status-error/20 border border-status-error text-text-primary px-4 py-3 rounded">
               {error}
             </div>
           )}

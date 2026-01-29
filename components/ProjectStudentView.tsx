@@ -71,17 +71,23 @@ export default function ProjectStudentView({
 
         <div className="space-y-6">
           <div>
-            <h2 className="text-xl font-bold mb-2 text-pink-primary">Description</h2>
+            <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+              Description
+            </h2>
             <p className="text-text-secondary whitespace-pre-wrap">{project.description}</p>
           </div>
 
           <div>
-            <h2 className="text-xl font-bold mb-2 text-pink-primary">Prerequisites</h2>
+            <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+              Prerequisites
+            </h2>
             <p className="text-text-secondary whitespace-pre-wrap">{project.prerequisites}</p>
           </div>
 
           <div>
-            <h2 className="text-xl font-bold mb-2 text-pink-primary">Learning Objectives</h2>
+            <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+              Learning Objectives
+            </h2>
             <p className="text-text-secondary whitespace-pre-wrap">
               {project.learning_objectives}
             </p>
@@ -89,12 +95,14 @@ export default function ProjectStudentView({
 
           {project.codebase_link && (
             <div>
-              <h2 className="text-xl font-bold mb-2 text-pink-primary">Codebase</h2>
+              <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+                Codebase
+              </h2>
               <a
                 href={project.codebase_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-light hover:text-text-primary hover:underline"
+                className="text-text-primary underline decoration-purple-light/70 underline-offset-4 hover:decoration-purple-secondary"
               >
                 {project.codebase_link}
               </a>
@@ -103,12 +111,14 @@ export default function ProjectStudentView({
 
           {project.doc_link && (
             <div>
-              <h2 className="text-xl font-bold mb-2 text-pink-primary">Documentation</h2>
+              <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+                Documentation
+              </h2>
               <a
                 href={project.doc_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-light hover:text-text-primary hover:underline"
+                className="text-text-primary underline decoration-purple-light/70 underline-offset-4 hover:decoration-purple-secondary"
               >
                 {project.doc_link}
               </a>
@@ -116,7 +126,9 @@ export default function ProjectStudentView({
           )}
 
           <div>
-            <h2 className="text-xl font-bold mb-2 text-pink-primary">Participants</h2>
+            <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+              Participants
+            </h2>
             <div className="space-y-2">
               {participants
                 .filter((p) => p.status === 'Active')
@@ -152,7 +164,9 @@ export default function ProjectStudentView({
 
           {hasApplied && (
             <div className="pt-4">
-              <p className="text-purple-light font-bold">You have applied to this project</p>
+              <p className="text-text-primary font-bold underline decoration-purple-light/70 underline-offset-4">
+                You have applied to this project
+              </p>
             </div>
           )}
 
@@ -166,7 +180,7 @@ export default function ProjectStudentView({
 
           {user && profile && activeSlots >= 3 && !hasApplied && (
             <div className="pt-4">
-              <p className="text-status-error font-bold">
+              <p className="text-text-primary font-bold underline decoration-status-error decoration-2 underline-offset-4">
                 You have reached the maximum of 3 active project slots
               </p>
             </div>

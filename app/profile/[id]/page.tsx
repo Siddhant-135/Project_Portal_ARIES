@@ -71,7 +71,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
           <div className="flex-1">
             <Link
               href={`/project/${project.id}`}
-              className="text-lg font-bold text-purple-light hover:text-text-primary hover:underline"
+              className="text-lg font-bold text-text-primary underline decoration-purple-light/70 underline-offset-4 hover:decoration-purple-secondary"
             >
               {project.title}
             </Link>
@@ -96,7 +96,9 @@ export default async function ProfilePage({ params }: { params: { id: string } }
         </div>
         <p className="text-sm text-text-muted mt-2">
           {participant.status !== 'Active' && (
-            <span className="text-status-warning">({participant.status}) • </span>
+            <span className="text-text-primary underline decoration-status-warning decoration-2 underline-offset-4">
+              ({participant.status}) •{' '}
+            </span>
           )}
           Created: {formatDate(project.created_at)}
         </p>
@@ -133,13 +135,15 @@ export default async function ProfilePage({ params }: { params: { id: string } }
       {/* My Projects Section */}
       {hasAnyProjects ? (
         <div className="bg-bg-secondary rounded-lg p-6 ai-border ai-glow">
-          <h2 className="text-2xl font-bold mb-6 text-pink-primary">My Projects</h2>
+          <h2 className="text-2xl font-bold mb-6 text-text-primary border-l-2 border-purple-primary pl-3">
+            My Projects
+          </h2>
           
           <div className="space-y-8">
             {/* Ongoing Projects */}
             {ongoingProjects.length > 0 && (
               <section>
-                <h3 className="text-xl font-bold mb-4 text-status-info flex items-center gap-2">
+                <h3 className="text-xl font-bold mb-4 text-text-primary flex items-center gap-2 px-3 py-2 rounded-lg border border-status-info/40 bg-status-info/10">
                   <span className="w-3 h-3 bg-status-info rounded-full"></span>
                   Ongoing Projects
                   <span className="text-sm font-normal text-text-muted ml-2">({ongoingProjects.length})</span>
@@ -153,7 +157,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
             {/* Open Projects */}
             {openProjects.length > 0 && (
               <section>
-                <h3 className="text-xl font-bold mb-4 text-status-success flex items-center gap-2">
+                <h3 className="text-xl font-bold mb-4 text-text-primary flex items-center gap-2">
                   <span className="w-3 h-3 bg-status-success rounded-full"></span>
                   Open Projects
                   <span className="text-sm font-normal text-text-muted ml-2">({openProjects.length})</span>
@@ -181,7 +185,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
             {/* Terminated Projects (only for mentors) */}
             {terminatedProjects.length > 0 && (
               <section>
-                <h3 className="text-xl font-bold mb-4 text-status-error flex items-center gap-2">
+                <h3 className="text-xl font-bold mb-4 text-text-primary flex items-center gap-2">
                   <span className="w-3 h-3 bg-status-error rounded-full"></span>
                   Terminated Projects
                   <span className="text-sm font-normal text-text-muted ml-2">({terminatedProjects.length})</span>

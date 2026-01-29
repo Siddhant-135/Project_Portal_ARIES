@@ -192,24 +192,30 @@ export default function ProjectMentorView({
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-status-error/20 border border-status-error text-status-error rounded">
+          <div className="mb-4 p-3 bg-status-error/20 border border-status-error text-text-primary rounded">
             {error}
           </div>
         )}
 
         <div className="space-y-6">
           <div>
-            <h2 className="text-xl font-bold mb-2 text-pink-primary">Description</h2>
+            <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+              Description
+            </h2>
             <p className="text-text-secondary whitespace-pre-wrap">{project.description}</p>
           </div>
 
           <div>
-            <h2 className="text-xl font-bold mb-2 text-pink-primary">Prerequisites</h2>
+            <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+              Prerequisites
+            </h2>
             <p className="text-text-secondary whitespace-pre-wrap">{project.prerequisites}</p>
           </div>
 
           <div>
-            <h2 className="text-xl font-bold mb-2 text-pink-primary">Learning Objectives</h2>
+            <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+              Learning Objectives
+            </h2>
             <p className="text-text-secondary whitespace-pre-wrap">
               {project.learning_objectives}
             </p>
@@ -217,12 +223,14 @@ export default function ProjectMentorView({
 
           {project.codebase_link && (
             <div>
-              <h2 className="text-xl font-bold mb-2 text-pink-primary">Codebase</h2>
+              <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+                Codebase
+              </h2>
               <a
                 href={project.codebase_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-light hover:text-text-primary hover:underline"
+                className="text-text-primary underline decoration-purple-light/70 underline-offset-4 hover:decoration-purple-secondary"
               >
                 {project.codebase_link}
               </a>
@@ -231,12 +239,14 @@ export default function ProjectMentorView({
 
           {project.doc_link && (
             <div>
-              <h2 className="text-xl font-bold mb-2 text-pink-primary">Documentation</h2>
+              <h2 className="text-xl font-bold mb-2 text-text-primary border-l-2 border-purple-primary pl-3">
+                Documentation
+              </h2>
               <a
                 href={project.doc_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-light hover:text-text-primary hover:underline"
+                className="text-text-primary underline decoration-purple-light/70 underline-offset-4 hover:decoration-purple-secondary"
               >
                 {project.doc_link}
               </a>
@@ -246,7 +256,7 @@ export default function ProjectMentorView({
           {/* Pending Applicants - Only shown when project is Open */}
           {project.status === 'Open' && (
             <div>
-              <h2 className="text-xl font-bold mb-4 text-status-warning">
+              <h2 className="text-xl font-bold mb-4 text-text-primary border-l-2 border-status-warning pl-3">
                 Pending Applicants ({pendingApplicants.length})
               </h2>
               {pendingApplicants.length > 0 ? (
@@ -304,7 +314,7 @@ export default function ProjectMentorView({
 
           {/* Active Mentees */}
           <div>
-            <h2 className="text-xl font-bold mb-4 text-pink-primary">
+            <h2 className="text-xl font-bold mb-4 text-text-primary border-l-2 border-purple-primary pl-3">
               Active Mentees ({activeMentees.length} / {project.max_students})
             </h2>
             {activeMentees.length > 0 ? (
@@ -323,13 +333,13 @@ export default function ProjectMentorView({
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleDrop(participant)}
-                            className="px-3 py-1 bg-status-warning text-text-primary rounded hover:opacity-80 transition text-sm font-medium"
+                            className="px-3 py-1 bg-status-error text-text-primary rounded hover:opacity-80 transition text-sm font-medium"
                           >
                             Drop
                           </button>
                           <button
                             onClick={() => handleDischarge(participant)}
-                            className="px-3 py-1 bg-pink-secondary text-text-primary rounded hover:bg-pink-primary transition text-sm font-medium"
+                            className="px-3 py-1 bg-status-success text-text-primary rounded hover:opacity-80 transition text-sm font-medium"
                           >
                             Discharge
                           </button>
@@ -346,7 +356,9 @@ export default function ProjectMentorView({
 
           {/* Project Actions */}
           <div className="border-t border-border-primary pt-6">
-            <h2 className="text-xl font-bold mb-4 text-pink-primary">Project Actions</h2>
+            <h2 className="text-xl font-bold mb-4 text-text-primary border-l-2 border-purple-primary pl-3">
+              Project Actions
+            </h2>
             <div className="flex flex-wrap gap-3">
               {project.status === 'Open' && (
                 <button
@@ -363,7 +375,7 @@ export default function ProjectMentorView({
                   <button
                     onClick={handleReopen}
                     disabled={loading === 'reopen'}
-                    className="px-4 py-2 bg-status-warning text-text-primary rounded hover:opacity-80 transition disabled:opacity-50 font-bold"
+                    className="px-4 py-2 bg-status-info text-text-primary rounded hover:opacity-80 transition disabled:opacity-50 font-bold"
                   >
                     {loading === 'reopen' ? 'Processing...' : 'Reopen Applications'}
                   </button>

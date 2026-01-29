@@ -33,14 +33,14 @@ export default function Navigation({ user, profile }: NavigationProps) {
               <>
                 <Link
                   href="/"
-                  className="text-text-secondary hover:text-purple-light transition font-medium"
+                  className="text-text-secondary hover:text-text-primary transition font-medium hover:underline decoration-purple-light/70 underline-offset-4"
                 >
                   Feed
                 </Link>
                 {profile && (
                   <Link
                     href={`/profile/${profile.username}`}
-                    className="text-text-secondary hover:text-purple-light transition font-medium"
+                    className="text-text-secondary hover:text-text-primary transition font-medium hover:underline decoration-purple-light/70 underline-offset-4"
                   >
                     My Profile
                   </Link>
@@ -48,7 +48,7 @@ export default function Navigation({ user, profile }: NavigationProps) {
                 {canCreateProjects(profile?.role) && (
                   <Link
                     href="/project/new"
-                    className="text-text-secondary hover:text-purple-light transition font-medium"
+                    className="text-text-secondary hover:text-text-primary transition font-medium hover:underline decoration-purple-light/70 underline-offset-4"
                   >
                     New Project
                   </Link>

@@ -98,7 +98,13 @@ export default function ApplicationModal({
                   className="w-full px-3 py-2 bg-bg-primary border border-border-primary rounded-md text-text-primary focus:outline-none focus:ring-2 focus:ring-purple-primary disabled:opacity-50 disabled:cursor-not-allowed ai-border"
                   placeholder={prerequisitesMet ? "Enter your related experience or leave empty for N/A..." : "Check prerequisites met to enable this field"}
                 />
-                <p className={`text-sm mt-1 font-bold ${notesWordCount > maxNotesWords ? 'text-status-error' : 'text-text-muted'}`}>
+                <p
+                  className={`text-sm mt-1 font-bold ${
+                    notesWordCount > maxNotesWords
+                      ? 'text-text-primary underline decoration-status-error decoration-2 underline-offset-4'
+                      : 'text-text-muted'
+                  }`}
+                >
                   {notesWordCount} / {maxNotesWords} words
                 </p>
               </div>
@@ -120,7 +126,7 @@ export default function ApplicationModal({
           </div>
 
           {error && (
-            <div className="bg-status-error/20 border border-status-error text-status-error px-4 py-3 rounded">
+            <div className="bg-status-error/20 border border-status-error text-text-primary px-4 py-3 rounded">
               {error}
             </div>
           )}
